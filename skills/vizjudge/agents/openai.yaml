@@ -1,0 +1,4 @@
+interface:
+  display_name: "VizJudge"
+  short_description: "Rank charts and turn visual evidence into ML actions."
+  default_prompt: "Use $vizjudge to inspect this dataset, rank useful charts, and recommend the next modeling steps."

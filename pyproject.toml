@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vizjudge"
+version = "0.1.0"
+description = "Rank visualization value and turn chart evidence into machine-learning actions."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "VizJudge contributors" }]
+keywords = ["eda", "machine-learning", "visualization", "mcp", "agent-skill"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "matplotlib>=3.9,<4",
+  "numpy>=2.0,<3",
+  "pandas>=2.2,<4",
+]
+
+[project.optional-dependencies]
+mcp = ["mcp>=2,<3"]
+parquet = ["pyarrow>=17,<24"]
+dev = [
+  "mcp>=2,<3",
+  "pytest>=8,<10",
+  "pytest-cov>=5,<8",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+vizjudge = "vizjudge.cli:main"
+vizjudge-mcp = "vizjudge.mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vizjudge"]
+
+[tool.pytest.ini_options]
+addopts = "-q --basetemp=.pytest-tmp"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
