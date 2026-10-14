@@ -10,17 +10,21 @@ from typing import Any
 
 import pandas as pd
 
+from vizjudge._version import SCHEMA_VERSION, __version__
 from vizjudge.charts.categorical import render_categorical
 from vizjudge.charts.generator import ChartCandidate, generate_candidates
 from vizjudge.charts.numeric import render_numeric
 from vizjudge.charts.target import render_target
 from vizjudge.core.loader import load_dataset
 from vizjudge.core.profiler import profile_dataframe
-from vizjudge.core.type_infer import infer_types
+from vizjudge.core.type_infer import infer_types, resolve_task
+from vizjudge.core.validation import validate_top_k
 from vizjudge.recommendations.data_quality import recommend_data_quality
 from vizjudge.recommendations.feature_engineering import recommend_features
 from vizjudge.recommendations.modeling import recommend_models
+from vizjudge.scoring.predictive import validate_options, validate_predictive_value
 from vizjudge.scoring.ranker import rank_candidates
+from vizjudge.scoring.rules import judge_candidate
 
 
 def _safe_filename(value: str) -> str:
@@ -41,22 +45,63 @@ def analyze_frame(
     frame: pd.DataFrame,
     *,
     target: str | None = None,
+    task: str = "auto",
+    role_overrides: dict[str, str] | None = None,
+    validation: bool = True,
+    cv_folds: int = 5,
+    seed: int = 42,
+    baseline_features: list[str] | None = None,
+    diversity: bool = True,
+    max_candidates: int = 200,
     output_dir: str | Path | None = None,
     top_k: int = 8,
     render: bool = True,
     source: str | None = None,
 ) -> dict[str, Any]:
     """Analyze an in-memory DataFrame and optionally write a report directory."""
-    roles = infer_types(frame)
-    if target is not None and target not in frame.columns:
-        raise ValueError(f"Target column not found: {target}")
-    candidates = generate_candidates(frame, roles, target)
-    ranked = rank_candidates(frame, candidates, top_k=top_k) if candidates else []
+    validate_top_k(top_k)
+    validate_top_k(max_candidates)
+    validate_options(cv_folds, seed, baseline_features)
+    if any(not isinstance(value, bool) for value in (validation, diversity, render)):
+        raise ValueError("validation, diversity, and render must be booleans")
+    if render and output_dir is None:
+        raise ValueError("output_dir is required when render=True")
+    roles = infer_types(frame, role_overrides)
+    resolved_task = resolve_task(frame, roles, target, task, role_overrides)
+    candidates = generate_candidates(frame, roles, target, max_candidates=max_candidates)
+    for candidate in candidates:
+        judge_candidate(frame, candidate)
+    features = list(
+        dict.fromkeys(
+            candidate.feature
+            for candidate in sorted(candidates, key=lambda item: (-item.score, item.key))
+            if candidate.feature is not None
+        )
+    )
+    predictive = validate_predictive_value(
+        frame,
+        roles,
+        target,
+        resolved_task,
+        features,
+        enabled=validation,
+        cv_folds=cv_folds,
+        seed=seed,
+        baseline_features=baseline_features,
+    )
+    for candidate in candidates:
+        if candidate.feature:
+            candidate.predictive = predictive["features"].get(
+                candidate.feature,
+                {
+                    "status": "skipped",
+                    "reason": predictive["reason"] or "feature_budget",
+                },
+            )
+    ranked = rank_candidates(frame, candidates, top_k=top_k, diversity=diversity)
     profile = profile_dataframe(frame, roles)
 
     destination = Path(output_dir).expanduser().resolve() if output_dir else None
-    if render and destination is None:
-        raise ValueError("output_dir is required when render=True")
     if destination is not None:
         destination.mkdir(parents=True, exist_ok=True)
     if render and destination is not None:
@@ -71,19 +116,36 @@ def analyze_frame(
         "modeling": recommend_models(target, roles, ranked),
     }
     report: dict[str, Any] = {
-        "schema_version": "0.1",
+        "schema_version": SCHEMA_VERSION,
+        "vizjudge_version": __version__,
         "generated_at": datetime.now(UTC).isoformat(),
         "source": source,
         "target": target,
+        "task": resolved_task,
+        "role_overrides": dict(role_overrides or {}),
         "roles": roles,
         "profile": profile,
         "candidate_count": len(candidates),
+        "configuration": {
+            "top_k": top_k,
+            "render": render,
+            "diversity": diversity,
+            "validation": validation,
+            "cv_folds": cv_folds,
+            "seed": seed,
+            "baseline_features": list(baseline_features or []),
+            "max_candidates": max_candidates,
+        },
+        "predictive_validation": predictive,
+        "warnings": list(
+            dict.fromkeys(warning for candidate in ranked for warning in candidate.warnings)
+        ),
         "ranked_charts": [candidate.to_dict() for candidate in ranked],
         "recommendations": recommendations,
     }
     if destination is not None:
         (destination / "report.json").write_text(
-            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
+            json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8"
         )
         (destination / "summary.md").write_text(_markdown_summary(report), encoding="utf-8")
     return report
@@ -93,6 +155,14 @@ def analyze_dataset(
     path: str | Path,
     *,
     target: str | None = None,
+    task: str = "auto",
+    role_overrides: dict[str, str] | None = None,
+    validation: bool = True,
+    cv_folds: int = 5,
+    seed: int = 42,
+    baseline_features: list[str] | None = None,
+    diversity: bool = True,
+    max_candidates: int = 200,
     output_dir: str | Path = "outputs/vizjudge-report",
     top_k: int = 8,
     render: bool = True,
@@ -103,6 +173,14 @@ def analyze_dataset(
     return analyze_frame(
         frame,
         target=target,
+        task=task,
+        role_overrides=role_overrides,
+        validation=validation,
+        cv_folds=cv_folds,
+        seed=seed,
+        baseline_features=baseline_features,
+        diversity=diversity,
+        max_candidates=max_candidates,
         output_dir=output_dir,
         top_k=top_k,
         render=render,
@@ -114,13 +192,23 @@ def _markdown_summary(report: dict[str, Any]) -> str:
     lines = [
         "# VizJudge report",
         "",
+        f"- Version: {report['vizjudge_version']} (schema {report['schema_version']})",
         f"- Source: `{report['source'] or 'in-memory DataFrame'}`",
         f"- Target: `{report['target'] or 'not specified'}`",
         (
             f"- Shape: {report['profile']['row_count']} rows × "
             f"{report['profile']['column_count']} columns"
         ),
+        f"- Task: {report['task'] or 'unsupervised'}",
         f"- Candidate charts judged: {report['candidate_count']}",
+        "",
+        "## Predictive validation",
+        "",
+        f"- Status: {report['predictive_validation']['status']}",
+        f"- Reason: {report['predictive_validation']['reason'] or 'completed'}",
+        f"- Metric: {report['predictive_validation']['metric']}",
+        f"- Folds: {report['configuration']['cv_folds']}; seed: {report['configuration']['seed']}",
+        *(f"- {warning}" for warning in report["predictive_validation"]["warnings"]),
         "",
         "## Highest-value charts",
         "",
@@ -134,9 +222,15 @@ def _markdown_summary(report: dict[str, Any]) -> str:
                 "",
                 *(f"- {reason}" for reason in chart["reasons"]),
                 *(f"- Observation: {item}" for item in chart["observations"]),
+                *(f"- Warning: {item}" for item in chart["warnings"]),
+                f"- Selection score: {chart['selection_score']} "
+                f"(diversity penalty: {chart['selection_penalty']})",
+                *(f"- Selection: {item}" for item in chart["selection_reasons"]),
                 "",
             ]
         )
+        if chart["image"]:
+            lines.extend([f"![{chart['title']}]({chart['image']})", ""])
     lines.extend(["## Recommended next steps", ""])
     for category, items in report["recommendations"].items():
         lines.extend([f"### {category.replace('_', ' ').title()}", ""])

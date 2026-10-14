@@ -1,0 +1,75 @@
+import numpy as np
+import pandas as pd
+import pytest
+
+from vizjudge import analyze_frame
+from vizjudge.scoring.predictive import _design
+
+
+def test_incremental_value_separates_signal_and_noise_and_is_reproducible():
+    rng = np.random.default_rng(6)
+    signal = rng.normal(size=300)
+    frame = pd.DataFrame(
+        {
+            "signal": signal,
+            "noise": rng.normal(size=300),
+            "target": 5 * signal + rng.normal(0, 0.1, 300),
+        }
+    )
+    first = analyze_frame(frame, target="target", render=False)
+    second = analyze_frame(frame, target="target", render=False)
+    assert first["predictive_validation"] == second["predictive_validation"]
+    values = first["predictive_validation"]["features"]
+    assert values["signal"]["incremental_gain"] > 4
+    assert values["signal"]["positive_folds"] == 5
+    assert values["noise"]["incremental_gain"] < 0.1
+    with_baseline = analyze_frame(
+        frame, target="target", render=False, baseline_features=["signal"]
+    )
+    assert with_baseline["predictive_validation"]["features"]["signal"]["incremental_gain"] == 0
+    assert with_baseline["predictive_validation"]["features"]["noise"]["incremental_gain"] < 0.02
+
+
+def test_multiclass_and_categorical_regression():
+    frame = pd.DataFrame({"category": ["a", "b", "c"] * 60, "target": [0.0, 1.0, 2.0] * 60})
+    classified = analyze_frame(frame, target="target", task="classification", render=False)
+    assert classified["predictive_validation"]["metric"] == "balanced_accuracy"
+    assert classified["predictive_validation"]["features"]["category"]["feature_score"] == 1.0
+    regressed = analyze_frame(frame, target="target", task="regression", render=False)
+    assert any(chart["kind"] == "regression_box" for chart in regressed["ranked_charts"])
+    assert regressed["predictive_validation"]["features"]["category"]["incremental_gain"] > 0.7
+
+
+def test_preprocessing_is_fit_on_training_fold_only():
+    train = pd.DataFrame({"x": [0.0, 2.0, None], "cat": ["a", "b", None]})
+    test = pd.DataFrame({"x": [None, 100.0], "cat": ["unseen", "a"]})
+    left, right = _design(train, test, ["x", "cat"], {"x": "numeric", "cat": "categorical"})
+    assert left.shape[1] == right.shape[1] == 6
+    assert right[0, 1] == 0.0  # Impute training median, not held-out median.
+    assert right[1, 1] > 100
+    assert right[0, 3:].sum() == 0.0  # Unseen category does not create a new column.
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        {"cv_folds": 1},
+        {"cv_folds": True},
+        {"seed": -1},
+        {"baseline_features": ["target"]},
+        {"top_k": False},
+    ],
+)
+def test_invalid_validation_options(options):
+    frame = pd.DataFrame({"x": range(40), "target": [0, 1] * 20})
+    with pytest.raises(ValueError):
+        analyze_frame(frame, target="target", render=False, **options)
+
+
+def test_insufficient_support_and_missing_targets_are_reported():
+    frame = pd.DataFrame({"x": np.arange(40, dtype=float), "target": [0] * 38 + [1, None]})
+    report = analyze_frame(frame, target="target", render=False)
+    validation = report["predictive_validation"]
+    assert validation["status"] == "skipped"
+    assert validation["excluded_target_rows"] == 1
+    assert "class_support" in validation["reason"]

@@ -29,3 +29,16 @@ def test_ranker_puts_strong_target_relationship_first() -> None:
 
     assert ranked[0].x == "signal"
     assert ranked[0].score > ranked[1].score
+
+
+def test_duplicates_and_redundant_features_are_handled_without_name_collisions():
+    frame = pd.DataFrame({"a b": range(100), "a_b": range(100), "target": range(100)})
+    first = ChartCandidate("target_scatter", "first", "a b", "target", "target")
+    duplicate = ChartCandidate("target_scatter", "duplicate", "a b", "target", "target")
+    second = ChartCandidate("target_scatter", "second", "a_b", "target", "target")
+    ranked = rank_candidates(frame, [first, duplicate, second], top_k=3)
+    assert len(ranked) == 2
+    assert ranked[1].selection_penalty == 25
+    assert any("redundant" in reason for reason in ranked[1].selection_reasons)
+    plain = rank_candidates(frame, [first, second], top_k=2, diversity=False)
+    assert all(chart.selection_score == chart.score for chart in plain)

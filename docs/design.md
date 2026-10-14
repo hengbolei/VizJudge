@@ -23,8 +23,12 @@ dataset -> profile/types -> candidate chart specs -> value scoring
 - `vizjudge.core.report.analyze_dataset`: canonical Python API.
 - `vizjudge analyze`: human and automation-friendly CLI.
 - `vizjudge-mcp`: stdio MCP server with an `analyze_dataset` tool.
+- `vizjudge.agent.run_agent`, `vizjudge agent`, and MCP `run_agent`: the bounded
+  plan/tool/judge/refine loop.
 - `skills/vizjudge/SKILL.md`: reusable agent workflow.
 
-The first release evaluates tabular data. Chart-image understanding is deliberately left for
-a later phase because it requires a separate vision/OCR evidence model.
+Version 0.4 evaluates tabular data with task-aware validation and optional LLM
+review of structured evidence. Chart-image understanding remains a later phase
+because it requires a separate vision/OCR evidence model. See [Agent execution](agent.md)
+for process boundaries, provider integration, iteration and trace semantics.
 

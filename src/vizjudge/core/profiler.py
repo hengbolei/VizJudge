@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from vizjudge.core.type_infer import ROLE_NUMERIC, infer_types
+from vizjudge.core.validation import validate_frame
 
 
 def _scalar(value: Any) -> Any:
@@ -21,7 +22,8 @@ def _scalar(value: Any) -> Any:
 
 
 def profile_dataframe(frame: pd.DataFrame, roles: dict[str, str] | None = None) -> dict[str, Any]:
-    """Return dataset- and column-level diagnostics without exposing row values."""
+    """Return aggregate diagnostics, including frequent categorical values."""
+    validate_frame(frame)
     roles = roles or infer_types(frame)
     columns: list[dict[str, Any]] = []
     row_count = len(frame)

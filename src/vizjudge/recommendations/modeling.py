@@ -29,8 +29,26 @@ def recommend_models(
             "compare residual behavior."
         )
     strong = [chart for chart in ranked if chart.target and chart.score >= 70]
+    validated = [
+        chart
+        for chart in ranked
+        if chart.predictive
+        and chart.predictive.get("status") == "completed"
+        and chart.predictive["incremental_gain"] > 0
+        and chart.predictive["positive_folds"] >= len(chart.predictive["fold_gains"]) - 1
+    ]
+    if validated:
+        names = ", ".join(dict.fromkeys(chart.feature for chart in validated))
+        recommendations.append(
+            f"Prioritize {names} for follow-up: adding them individually improved the ridge "
+            "baseline on most held-out folds. Confirm with a domain-appropriate split and model."
+        )
     if strong:
-        names = ", ".join(dict.fromkeys(chart.x for chart in strong))
+        names = ", ".join(
+            dict.fromkeys(
+                chart.feature or (chart.y if chart.x == target else chart.x) for chart in strong
+            )
+        )
         recommendations.append(
             "Validate the incremental out-of-sample value of the strongest visual "
             f"signals: {names}."

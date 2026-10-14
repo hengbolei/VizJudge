@@ -1,6 +1,6 @@
 """VizJudge: chart-value ranking for machine-learning workflows."""
 
-from vizjudge.core.report import analyze_dataset
+from vizjudge._version import __version__
+from vizjudge.core.report import analyze_dataset, analyze_frame
 
-__all__ = ["analyze_dataset"]
-__version__ = "0.1.0"
+__all__ = ["analyze_dataset", "analyze_frame", "__version__"]

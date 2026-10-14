@@ -1,8 +1,11 @@
 """Load supported tabular datasets."""
 
+import csv
 from pathlib import Path
 
 import pandas as pd
+
+from vizjudge.core.validation import validate_frame
 
 SUPPORTED_SUFFIXES = {".csv", ".json", ".jsonl", ".ndjson", ".parquet"}
 
@@ -19,6 +22,12 @@ def load_dataset(path: str | Path) -> pd.DataFrame:
         raise ValueError(f"Unsupported dataset format {suffix!r}; expected one of: {allowed}")
 
     if suffix == ".csv":
+        with source.open(encoding="utf-8-sig", newline="") as handle:
+            header = next(csv.reader(handle), [])
+        if len(set(header)) != len(header):
+            raise ValueError("Dataset contains duplicate column names")
+        if any(not name.strip() for name in header):
+            raise ValueError("Column names must be non-empty strings")
         frame = pd.read_csv(source)
     elif suffix in {".jsonl", ".ndjson"}:
         frame = pd.read_json(source, lines=True)
@@ -27,8 +36,5 @@ def load_dataset(path: str | Path) -> pd.DataFrame:
     else:
         frame = pd.read_parquet(source)
 
-    if frame.empty:
-        raise ValueError(f"Dataset is empty: {source}")
-    if frame.columns.has_duplicates:
-        raise ValueError("Dataset contains duplicate column names")
+    validate_frame(frame)
     return frame

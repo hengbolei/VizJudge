@@ -1,0 +1,4 @@
+# Exact dependency versions used to verify the seeded v0.4 demo.
+numpy==2.5.2
+pandas==3.0.5
+matplotlib==3.11.1

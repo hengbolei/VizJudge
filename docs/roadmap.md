@@ -6,14 +6,24 @@
 - Candidate generation, scoring, selective rendering
 - JSON/Markdown report, CLI, MCP tool, and Agent Skill
 
-## 0.2 — Validation and task awareness
+## Validation and task awareness — included in 0.4
 
 - Cross-validated incremental predictive value
 - Regression/classification-specific scoring
 - Redundancy and chart-diversity penalties
-- Confidence and minimum-sample warnings
+- Explainable confidence labels, fold variability, and minimum-sample warnings
 
-## 0.3 — Chart understanding
+## 0.4 — Evidence-driven Agent loop (implemented)
+
+- Deterministic plan and allowlisted Python tool execution in timed subprocesses
+- Statistical and optional LLM Judge with evidence IDs and constrained refinements
+- Re-evaluation, selective final rendering, confidence and concrete next actions
+- CLI/MCP/Python interfaces, execution budgets and traceable reports
+- Seeded offline demo, regression tests and report schema migration guidance
+
+No separate 0.2 or 0.3 release is claimed; the implementation moves from 0.1 to 0.4.
+
+## Chart understanding — deferred from the original 0.3 proposal
 
 - Accept existing chart images and structured chart metadata
 - OCR/vision extraction with evidence provenance
@@ -23,6 +33,6 @@
 
 - Plugin API for chart generators, scorers, and recommendation policies
 - Stable report schema and compatibility tests
-- Dataset privacy controls and execution budgets
+- Stronger dataset privacy controls and OS-level execution isolation
 - Benchmark suite linking chart selection to downstream model outcomes
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vizjudge"
-version = "0.1.0"
+version = "0.4.0"
 description = "Rank visualization value and turn chart evidence into machine-learning actions."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -43,7 +43,7 @@ vizjudge-mcp = "vizjudge.mcp.server:main"
 packages = ["src/vizjudge"]
 
 [tool.pytest.ini_options]
-addopts = "-q --basetemp=.pytest-tmp"
+addopts = "-q"
 testpaths = ["tests"]
 pythonpath = ["src"]
 
