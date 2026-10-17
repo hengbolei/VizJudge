@@ -1,9 +1,53 @@
-# VizJudge v0.4 Agent loop
+# VizJudge v0.4 Agent workflow
 
-The objective is **少画图、看重点、给出下一步**: build a plan, call bounded analysis
-tools, judge the evidence, improve the selected charts, and produce actionable results.
+The objective is **少画图、看重点、给出下一步**: generate candidate charts, measure
+which ones carry validated signal, judge them, and produce actionable next steps.
 
-## Run
+VizJudge's value is its deterministic statistical judgment, not orchestration. A
+host agent such as Claude Code already has an LLM and, crucially, the user's domain
+context and code. VizJudge is therefore designed as a **toolset for host agents**:
+the host model calls fine-grained MCP tools and acts as the Judge. The built-in
+`vizjudge agent` loop remains as the reproducible batch/CI mode.
+
+| Mode | Who judges | Use for |
+| --- | --- | --- |
+| MCP tools + [`skills/vizjudge`](../skills/vizjudge/SKILL.md) | Host model, with column semantics and project code | Interactive analysis and code changes |
+| `vizjudge agent` / MCP `run_agent` | Statistics (optionally a recorded or HTTP Judge) | Reproducible batch runs, CI, audit records |
+| `vizjudge analyze` / MCP `analyze_dataset` | Statistics only, no judging pass | One-shot ranked report |
+
+## Host-agent tools (MCP)
+
+| Tool | Returns |
+| --- | --- |
+| `profile_dataset` | Profile, roles, sampling, data-quality actions |
+| `generate_candidates` | Every candidate with heuristic score, warnings, `chart_id`, evidence IDs |
+| `validate_features` | Held-out incremental gain per named feature, with its chart's evidence IDs |
+| `select_charts` | Diverse validated selection, statistical verdicts, optional host reviews and one refinement |
+| `render_charts` | PNGs for chosen chart IDs, in order, within the image budget |
+
+Chart IDs and evidence IDs are the same ones `judge_report` and the batch loop use,
+so a host can cite `C<hash>.incremental_gain` from `validate_features` in a
+`select_charts` review. IDs are stable when every call uses the same `target`,
+`task`, `role_overrides`, `seed` and `budget.max_rows`.
+
+`select_charts` accepts `reviews` for **any subset** of the selected charts, using the
+[Judge response shape](#optional-llm-judge-adapters) below, plus `refinement`.
+Unreviewed charts keep their statistical verdict. The same guarantees apply as for
+any Judge: evidence must exist and belong to the chart, combined priority is the
+minimum of statistical and host priority, and a statistical `defer` cannot be
+reversed. The output's `selection` records the judgment mode
+(`statistical_only` or `statistical_and_host`), the refinement, and the chart IDs
+before and after it.
+
+Every tool accepts a `budget` object with `ExecutionBudget` fields and runs in the
+same bounded worker subprocess as the batch loop (input bytes, row sampling,
+candidate cap, per-call timeout, image cap). Each result carries `execution` with
+the dataset SHA-256, budget and tool trace. Anticipated failures (unknown columns,
+uncited evidence, exhausted budget) are returned to the host as tool errors with
+their reason. The skill describes the recommended call order, leakage review and
+how to turn results into code changes.
+
+## Batch mode: `vizjudge agent`
 
 ```bash
 vizjudge agent data.csv --target outcome --task classification --output outputs/agent
@@ -11,10 +55,10 @@ vizjudge agent data.csv --target price --task regression --baseline age --top-k 
 python examples/agent_loop/demo.py --output outputs/demo-v04
 ```
 
-`analyze` still runs the direct analysis pipeline. `agent` adds planning, isolated
-tool execution, judging, refinement, confidence, and an execution record. The
-MCP server exposes both `analyze_dataset` and `run_agent`. Python users can import
-`ExecutionBudget` and `run_agent` from `vizjudge.agent`.
+`agent` runs a fixed, deterministic plan with isolated tool execution, judging,
+refinement, confidence and an execution record, so the same input and options
+reproduce the same result — suitable for CI and audits. Python users can import
+`ExecutionBudget` and `run_agent` from `vizjudge.agent`; MCP exposes it as `run_agent`.
 
 ## Plan and execution
 
@@ -69,9 +113,11 @@ leakage. Features are screened using the full analysis sample, so these checks
 are exploratory, not an unbiased estimate of a selected production model. Recheck
 the final hypotheses on a domain-appropriate independent validation split.
 
-## LLM Judge
+## Optional LLM Judge adapters
 
-Three explicit modes are supported:
+In host-agent use, the host model is the Judge and no adapter is needed. The
+adapters below exist for the batch loop, when no host model is present. Three
+explicit modes are supported:
 
 - No adapter: statistical-only review; the report does not claim an LLM was called.
 - `--judge-file response.json`: replay a recorded response, without a live model.
