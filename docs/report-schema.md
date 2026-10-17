@@ -1,7 +1,7 @@
 # Report schema 0.4
 
 Reports are JSON objects. `schema_version` is `"0.4"`; `vizjudge_version` is
-`"0.4.0"`. Existing `source`, `target`, `roles`, `profile`, `candidate_count`,
+the package version (for example `"0.5.0"`; the schema is unchanged since 0.4.0). Existing `source`, `target`, `roles`, `profile`, `candidate_count`,
 `ranked_charts`, `recommendations`, and `generated_at` fields remain in complete
 reports. Profiles include frequent category values and should be handled as data.
 

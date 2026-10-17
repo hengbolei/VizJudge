@@ -12,6 +12,15 @@ from vizjudge.agent import ExecutionBudget, run_agent
 from vizjudge.core.loader import load_dataset
 from vizjudge.core.profiler import profile_dataframe
 from vizjudge.core.report import analyze_dataset
+from vizjudge.integrations import (
+    MCP_CLIENTS,
+    SKILL_TARGETS,
+    doctor,
+    install_skill,
+    mcp_config,
+    skill_root,
+    skill_source,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -60,10 +69,46 @@ def build_parser() -> argparse.ArgumentParser:
     agent.add_argument("--max-candidates", type=int, default=200)
     agent.add_argument("--max-rendered-charts", type=int, default=8)
     agent.add_argument("--max-input-bytes", type=int, default=50000000)
+
+    skill = subparsers.add_parser("skill", help="Install the bundled agent skill")
+    skill_commands = skill.add_subparsers(dest="skill_command", required=True)
+    install = skill_commands.add_parser(
+        "install", help="Copy the skill into a host's skills folder"
+    )
+    install.add_argument("--target", choices=sorted(SKILL_TARGETS), default="agents")
+    install.add_argument(
+        "--project", action="store_true", help="Install under the current directory, not home"
+    )
+    install.add_argument("--dest", type=Path, help="Explicit skills root; overrides --target")
+    install.add_argument("--force", action="store_true", help="Replace an installed copy")
+    skill_commands.add_parser("path", help="Print the bundled skill folder")
+
+    config = subparsers.add_parser("mcp-config", help="Print MCP server config for a host agent")
+    config.add_argument("--client", choices=MCP_CLIENTS, default="dsh")
+    subparsers.add_parser("doctor", help="Check the installation for host-agent use")
     return parser
 
 
+def _integration(args: argparse.Namespace) -> int:
+    if args.command == "skill":
+        if args.skill_command == "path":
+            print(skill_source())
+            return 0
+        installed = install_skill(skill_root(args.target, args.project, args.dest), args.force)
+        print(f"Installed the VizJudge skill to {installed.resolve()}")
+        return 0
+    if args.command == "mcp-config":
+        print(mcp_config(args.client), end="")
+        return 0
+    rows = doctor()
+    for check, ok, detail in rows:
+        print(f"[{'ok' if ok else 'missing'}] {check}: {detail}")
+    return 0 if all(ok for _, ok, _ in rows) else 1
+
+
 def _run(args: argparse.Namespace) -> int:
+    if args.command in {"skill", "mcp-config", "doctor"}:
+        return _integration(args)
     if args.command == "profile":
         result = profile_dataframe(load_dataset(args.dataset))
         print(json.dumps(result, indent=2, ensure_ascii=False))

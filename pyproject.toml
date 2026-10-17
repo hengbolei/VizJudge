@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vizjudge"
-version = "0.4.0"
+version = "0.5.0"
 description = "Rank visualization value and turn chart evidence into machine-learning actions."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -25,6 +25,11 @@ dependencies = [
   "pandas>=2.2,<4",
 ]
 
+[project.urls]
+Homepage = "https://github.com/hengbolei/VizJudge"
+Documentation = "https://github.com/hengbolei/VizJudge/tree/main/docs"
+Changelog = "https://github.com/hengbolei/VizJudge/blob/main/CHANGELOG.md"
+
 [project.optional-dependencies]
 mcp = ["mcp>=2,<3"]
 parquet = ["pyarrow>=17,<24"]
@@ -41,6 +46,10 @@ vizjudge-mcp = "vizjudge.mcp.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/vizjudge"]
+
+# Ship the agent skill inside the wheel so `vizjudge skill install` works after pip install.
+[tool.hatch.build.targets.wheel.force-include]
+"skills/vizjudge" = "vizjudge/skill"
 
 [tool.pytest.ini_options]
 addopts = "-q"

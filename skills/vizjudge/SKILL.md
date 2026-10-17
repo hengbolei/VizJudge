@@ -10,6 +10,21 @@ incremental gains and stable evidence IDs. You add what it cannot know: column
 semantics, the user's domain, how the data was collected, and the project's code.
 Your judgment may only **lower** statistical priority or confidence, never raise it.
 
+## Setup check (do this first)
+
+1. Look for the VizJudge MCP tools. Hosts prefix them with the server name, e.g.
+   `mcp__vizjudge__profile_dataset` in DeepSeek Harness and Claude Code.
+2. If they are missing, run `vizjudge --version` (or `python -m vizjudge.cli --version`).
+   - Installed but no tools: the MCP server is not registered. Show the user the
+     output of `vizjudge mcp-config --client dsh` (or `--client json` / `--client claude`)
+     and ask them to add it and restart the host. `vizjudge doctor` lists what is missing.
+     Meanwhile use the CLI fallback below.
+   - Not installed: ask the user before installing anything. The install command is
+     `pip install "vizjudge[mcp] @ git+https://github.com/hengbolei/VizJudge"`
+     (`pip install "vizjudge[mcp]"` once published on PyPI).
+3. Pass **absolute** paths for `path` and `output_dir`: the server's working directory
+   is chosen by the host, not by the user's project.
+
 ## Call order (MCP)
 
 Pass the same `target`, `task`, `role_overrides`, `seed` and `budget.max_rows` to every

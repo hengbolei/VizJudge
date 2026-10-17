@@ -28,5 +28,5 @@ def test_report_pipeline_writes_structured_outputs(tmp_path) -> None:
     assert list(output_path.glob("*.png"))
     serialized = json.loads((output_path / "report.json").read_text(encoding="utf-8"))
     assert serialized["schema_version"] == "0.4"
-    assert serialized["vizjudge_version"] == "0.4.0"
+    assert serialized["vizjudge_version"] == "0.5.0"
     assert serialized["predictive_validation"]["status"] == "completed"

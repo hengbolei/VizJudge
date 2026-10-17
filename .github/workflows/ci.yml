@@ -63,6 +63,9 @@ jobs:
           test -s smoke-report/report.json
           test -s smoke-report/summary.md
           ls smoke-report/*.png
+          run vizjudge skill install --dest skills-smoke
+          test -s skills-smoke/vizjudge/SKILL.md
+          run vizjudge mcp-config --client dsh | grep -q "vizjudge.mcp.server"
       - uses: actions/upload-artifact@v4
         with:
           name: dist

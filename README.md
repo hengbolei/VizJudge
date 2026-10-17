@@ -113,27 +113,26 @@ charts. Agent runs also write `execution.json`. Use `--no-render` for structured
 analysis only. `--task regression` or `--task classification` resolves ambiguous
 targets; repeat `--role COLUMN=ROLE` for domain-specific role overrides.
 
-## MCP server
+## Use it from an agent
 
-The MCP integration targets the stable 2.x Python SDK:
+One package provides both the MCP server and the skill:
 
 ```bash
-uv sync --extra mcp
-uv run vizjudge-mcp
+pip install "vizjudge[mcp] @ git+https://github.com/hengbolei/VizJudge"
+vizjudge skill install                  # copies the skill to ~/.agents/skills/vizjudge
+vizjudge mcp-config --client dsh        # or: --client json | --client claude
+vizjudge doctor                         # checks the interpreter, mcp and installed skills
 ```
 
-Example client configuration:
+`mcp-config` prints a registration for the current interpreter
+(`python -m vizjudge.mcp.server`), so the host needs no PATH or virtual-environment
+setup. `--client json` prints the common `mcpServers` format used by many hosts.
+Step-by-step host guide: [DeepSeek Harness](docs/integrations/deepseek-harness.md).
 
-```json
-{
-  "mcpServers": {
-    "vizjudge": {
-      "command": "uv",
-      "args": ["--directory", "/absolute/path/to/vizjudge", "run", "vizjudge-mcp"]
-    }
-  }
-}
-```
+## MCP server
+
+The MCP integration targets the stable 2.x Python SDK. The server speaks stdio and is
+started by the host agent as `python -m vizjudge.mcp.server` (or `vizjudge-mcp`).
 
 | Tool | Purpose |
 | --- | --- |
@@ -152,8 +151,11 @@ directory.
 
 ## Agent Skill
 
-The reusable skill lives at [`skills/vizjudge`](skills/vizjudge). Copy that folder into a
-compatible agent's skill directory, or invoke it from the repository as `$vizjudge`.
+The skill lives at [`skills/vizjudge`](skills/vizjudge) and is bundled in the wheel.
+`vizjudge skill install` copies it to `~/.agents/skills` (`--target dsh|claude`,
+`--project` for the current project, or `--dest DIR`). Codex can invoke it from the
+repository as `$vizjudge`. It checks its own prerequisites first and falls back to the CLI
+when the MCP tools are not registered.
 It makes the host model the Judge: recommended tool order, evidence-citation rules,
 a leakage review based on column semantics, and how to turn results into code changes.
 
@@ -166,12 +168,16 @@ vizjudge agent DATASET [--target COLUMN] [--task TASK] [--output DIR]
                [--judge-file FILE | --judge-url URL] [--max-iterations N]
                [--max-tool-calls N] [--max-seconds S] [--python-timeout S]
                [--max-rows N] [--max-candidates N] [--max-rendered-charts N]
+vizjudge skill install [--target agents|dsh|claude] [--project] [--dest DIR] [--force]
+vizjudge skill path
+vizjudge mcp-config [--client dsh|json|claude]
+vizjudge doctor
 vizjudge --version
 ```
 
 ## Project status
 
-This is an alpha-quality, local-first v0.4 implementation. The Agent loop,
+This is an alpha-quality, local-first v0.5 implementation. The Agent loop,
 predictive checks, evidence-grounded Judge integration and execution budgets are
 implemented. Live Judge quality and downstream model outcomes still require
 benchmarks; image/OCR ingestion and OS-level sandboxing are future work. See the

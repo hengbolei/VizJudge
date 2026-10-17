@@ -12,11 +12,11 @@ from vizjudge.core.loader import load_dataset
 
 def test_versions_and_report_contract_match(capsys):
     metadata = tomllib.loads((Path(__file__).parents[1] / "pyproject.toml").read_text())
-    assert metadata["project"]["version"] == __version__ == "0.4.0"
+    assert metadata["project"]["version"] == __version__ == "0.5.0"
     with pytest.raises(SystemExit) as result:
         main(["--version"])
     assert result.value.code == 0
-    assert "0.4.0" in capsys.readouterr().out
+    assert "0.5.0" in capsys.readouterr().out
     report = analyze_frame(pd.DataFrame({"x": [1.0, 2.0, 3.0]}), render=False)
     assert {
         "schema_version",
