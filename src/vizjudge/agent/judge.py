@@ -19,32 +19,37 @@ Judge = Callable[[dict[str, Any]], dict[str, Any]]
 REFINEMENTS = {"none", "prefer_validated", "increase_diversity", "reduce_charts"}
 
 
-def build_evidence(report: dict[str, Any]) -> dict[str, Any]:
-    """Expose aggregate chart evidence without row data or profile top_values."""
-    charts = []
-    for chart in report["ranked_charts"]:
-        prefix = "C" + hashlib.sha256(chart_key(chart).encode("utf-8")).hexdigest()[:12]
-        evidence = []
-        for name, value in chart["metrics"].items():
+def chart_evidence(chart: dict[str, Any]) -> list[dict[str, Any]]:
+    """Stable, citable evidence items for one chart (aggregates only)."""
+    prefix = "C" + hashlib.sha256(chart_key(chart).encode("utf-8")).hexdigest()[:12]
+    evidence = [
+        {
+            "id": f"{prefix}.{name}",
+            "metric": name,
+            "value": value,
+            "source": "statistical_analysis",
+        }
+        for name, value in chart["metrics"].items()
+    ]
+    prediction = chart["predictive"]
+    if prediction and prediction["status"] == "completed":
+        for name in ("incremental_gain", "gain_std", "positive_folds"):
             evidence.append(
                 {
                     "id": f"{prefix}.{name}",
                     "metric": name,
-                    "value": value,
-                    "source": "statistical_analysis",
+                    "value": prediction[name],
+                    "source": "held_out_validation",
                 }
             )
+    return evidence
+
+
+def build_evidence(report: dict[str, Any]) -> dict[str, Any]:
+    """Expose aggregate chart evidence without row data or profile top_values."""
+    charts = []
+    for chart in report["ranked_charts"]:
         prediction = chart["predictive"]
-        if prediction and prediction["status"] == "completed":
-            for name in ("incremental_gain", "gain_std", "positive_folds"):
-                evidence.append(
-                    {
-                        "id": f"{prefix}.{name}",
-                        "metric": name,
-                        "value": prediction[name],
-                        "source": "held_out_validation",
-                    }
-                )
         charts.append(
             {
                 "chart_id": chart_key(chart),
@@ -54,7 +59,7 @@ def build_evidence(report: dict[str, Any]) -> dict[str, Any]:
                 "score": chart["score"],
                 "warnings": chart["warnings"],
                 "predictive_metric": prediction.get("metric") if prediction else None,
-                "evidence": evidence,
+                "evidence": chart_evidence(chart),
             }
         )
     return {
@@ -105,7 +110,14 @@ def confidence(chart: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def judge_report(report: dict[str, Any], llm_judge: Judge | None = None) -> dict[str, Any]:
+def judge_report(
+    report: dict[str, Any], llm_judge: Judge | None = None, *, partial: bool = False
+) -> dict[str, Any]:
+    """Combine statistical review with an optional grounded Judge response.
+
+    ``partial`` lets a host model review only some charts; unreviewed charts keep
+    their statistical verdict and priority.
+    """
     context = build_evidence(report)
     reviews = []
     for chart, evidence in zip(report["ranked_charts"], context["charts"], strict=True):
@@ -186,7 +198,7 @@ def judge_report(report: dict[str, Any], llm_judge: Judge | None = None) -> dict
             grounded["verdict"] = "defer"
         # An LLM cannot increase the measured/statistical priority.
         grounded["combined_priority"] = min(grounded["statistical_priority"], float(priority))
-    if seen != set(by_id):
+    if not partial and seen != set(by_id):
         raise ValueError("LLM Judge must review every supplied chart exactly once")
     result["mode"] = "statistical_and_llm"
     result["refinement"] = refinement

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Repositioned VizJudge as a statistical toolset for host agents: the host model
+  is the Judge and `vizjudge agent` is the reproducible batch/CI mode.
+- Added MCP tools `profile_dataset`, `generate_candidates`, `validate_features`,
+  `select_charts` (partial host reviews that can only lower priority) and
+  `render_charts`, with shared evidence IDs, budgets and execution traces.
+  `analyze_dataset` and `run_agent` are unchanged.
+- Rewrote the skill around host judging, leakage review and project code changes.
+
 ## 0.4.0 — 2026-10-14
 
 - Added a deterministic Agent loop: plan, profile, bounded Python analysis,

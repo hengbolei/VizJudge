@@ -8,10 +8,12 @@ from pathlib import Path
 
 from vizjudge.agent.judge import file_judge, http_judge, judge_report
 from vizjudge.agent.runner import _refine
+from vizjudge.agent.tools import list_candidates, render_chart_ids, validate_features
 from vizjudge.charts.generator import ChartCandidate
 from vizjudge.core.loader import load_dataset
 from vizjudge.core.profiler import profile_dataframe
 from vizjudge.core.report import _render, _safe_filename, analyze_frame
+from vizjudge.core.type_infer import infer_types
 
 
 def execute(request: dict) -> dict:
@@ -31,7 +33,7 @@ def execute(request: dict) -> dict:
             else:
                 raise ValueError("Unsupported Judge adapter")
         return judge_report(request["report"], llm)
-    if tool not in {"profile", "analyze", "render"}:
+    if tool not in {"profile", "analyze", "render", "candidates", "validate", "render_ids"}:
         raise ValueError(f"Tool is not allowed: {tool}")
     source = Path(request["path"])
     if source.stat().st_size > request["max_input_bytes"]:
@@ -63,7 +65,23 @@ def execute(request: dict) -> dict:
             chart["image"] = filename
         return report
     if tool == "profile":
-        return {"profile": profile_dataframe(frame), "sampling": sampling}
+        overrides = request.get("role_overrides")
+        roles = infer_types(frame, overrides) if overrides else None
+        return {"profile": profile_dataframe(frame, roles), "sampling": sampling}
+    if tool == "candidates":
+        return {**list_candidates(frame, **request["options"]), "sampling": sampling}
+    if tool == "validate":
+        return {**validate_features(frame, **request["options"]), "sampling": sampling}
+    if tool == "render_ids":
+        return {
+            **render_chart_ids(
+                frame,
+                output_dir=request["output_dir"],
+                max_charts=request["max_charts"],
+                **request["options"],
+            ),
+            "sampling": sampling,
+        }
     report = analyze_frame(frame, source=str(source.resolve()), **request["options"])
     report["sampling"] = sampling
     if sampling["sampled"]:
