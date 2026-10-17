@@ -9,6 +9,41 @@ data quality, feature engineering, and modeling?"**
 
 > 面向机器学习流程的图表价值判断器：少画图、看重点、给出下一步。
 
+## What the output looks like
+
+Real output on the Breast Cancer Wisconsin data (569 rows, 30 features, 60 candidate
+charts judged, 6 rendered). Full report: [`outputs/sample_report`](outputs/sample_report/summary.md).
+
+<img src="outputs/sample_report/01-target_box__diagnosis__worst_concave_points__diagnosis.png" alt="worst_concave_points by diagnosis" width="420">
+
+```text
+### 1. worst_concave_points by target diagnosis — 91.7/100
+- strong group separation by eta squared (0.63)
+- Held-out balanced_accuracy gain over baseline: 0.4011 (positive is better).
+- high confidence: positive incremental ridge-baseline gain in every held-out fold.
+
+### 2. Distribution of area_error — 85.0/100
+- absolute skew is 5.45 -> compare raw and monotonic transforms inside CV.
+
+### 3. worst_perimeter by target diagnosis — 89.9/100
+- Selection score: 84.9 (diversity penalty: 5.0): this chart family is already represented.
+```
+
+Reproduce it offline with
+`uv run vizjudge agent examples/breast_cancer/breast_cancer.csv --target diagnosis --task classification --seed 42 --output outputs/sample_report`.
+
+## How VizJudge differs
+
+| Tool | Focus | What VizJudge adds |
+| --- | --- | --- |
+| [dabl](https://github.com/dabl/dabl) | Target-aware plots chosen by simple supervised heuristics | Seeded cross-validated *incremental* gain per chart, redundancy/diversity penalties, confidence labels, and an action report (data quality, features, modeling) |
+| [AutoViz](https://github.com/AutoViML/AutoViz) | Automatic plotting after internal feature selection | The selection evidence is explicit: every chart carries its scores, fold gains and reasons in `report.json` instead of a black-box filter |
+| [LIDA](https://github.com/microsoft/lida) | LLM-generated goals, chart code and LLM-judged chart quality | Statistical validation first; an LLM Judge is optional and may only cite evidence IDs that the deterministic pipeline produced |
+| [ydata-profiling](https://github.com/ydataai/ydata-profiling) | Exhaustive per-column and pairwise profile reports | Deliberately few charts: ranks candidates and renders only the top-k worth a modeler's attention |
+
+These tools are complementary: use a profiler for completeness and VizJudge to decide
+which visual evidence should change the next modeling step.
+
 ## v0.4: an evidence-driven Agent loop
 
 VizJudge now runs **planning → tool calls → controlled Python analysis → chart
@@ -121,6 +156,9 @@ benchmarks; image/OCR ingestion and OS-level sandboxing are future work. See the
 [roadmap](docs/roadmap.md) and [schema migration guide](docs/report-schema.md).
 
 ## Development
+
+Dependencies are pinned in [`uv.lock`](uv.lock); CI runs lint and tests on Linux and
+Windows with Python 3.11 and 3.12, then builds and smoke-tests the wheel.
 
 ```bash
 uv sync --extra dev

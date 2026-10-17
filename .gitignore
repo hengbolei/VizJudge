@@ -13,7 +13,6 @@ build/
 .idea/
 .vscode/
 
-# Generated VizJudge artifacts (keep the documented sample placeholder)
+# Generated VizJudge artifacts (keep the committed sample report)
 outputs/*
 !outputs/sample_report/
-!outputs/sample_report/README.md
