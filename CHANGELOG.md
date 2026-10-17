@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0 — Unreleased
+## 0.5.0 — 2026-10-17
 
 - Made the agent integration distributable: the wheel bundles the skill, and new CLI
   commands `vizjudge skill install`, `vizjudge mcp-config --client dsh|json|claude` and
@@ -9,7 +9,8 @@
 - Added a DeepSeek Harness guide (`docs/integrations/deepseek-harness.md`) and a skill
   setup check: find the tools, otherwise detect the CLI, ask before installing, and use
   absolute paths.
-- Added a tag-triggered PyPI release workflow (trusted publishing) and project URLs.
+- Added a tag-triggered release workflow that attaches the sdist and wheel to a GitHub
+  Release, with opt-in PyPI trusted publishing (`PUBLISH_TO_PYPI`), and project URLs.
 - Added `uv.lock` and a GitHub Actions CI workflow (Linux/Windows × Python 3.11/3.12,
   plus a wheel build and installed-wheel smoke test).
 - Added a runnable offline Breast Cancer Wisconsin example and a committed sample report
