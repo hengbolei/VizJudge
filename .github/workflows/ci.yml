@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - name: Install
+        run: uv sync --locked --extra dev
+      - name: Lint
+        run: uv run ruff check .
+      - name: Test
+        run: uv run pytest --cov=vizjudge --cov-report=term-missing
+
+  wheel:
+    name: build and smoke-test wheel
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Build sdist and wheel
+        run: uv build
+      - name: Smoke-test installed wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          wheel=$(ls dist/vizjudge-*.whl)
+          # Run from a temp dir so the source tree cannot shadow the installed package.
+          cp examples/breast_cancer/breast_cancer.csv "$RUNNER_TEMP/"
+          cd "$RUNNER_TEMP"
+          run() { uv run --isolated --no-project --with "$GITHUB_WORKSPACE/$wheel" "$@"; }
+          run vizjudge --version
+          run vizjudge analyze breast_cancer.csv --target diagnosis --output smoke-report
+          test -s smoke-report/report.json
+          test -s smoke-report/summary.md
+          ls smoke-report/*.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

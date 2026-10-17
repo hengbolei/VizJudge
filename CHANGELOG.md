@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Added `uv.lock` and a GitHub Actions CI workflow (Linux/Windows × Python 3.11/3.12,
+  plus a wheel build and installed-wheel smoke test).
+- Added a runnable offline Breast Cancer Wisconsin example and a committed sample report
+  in `outputs/sample_report`; removed the download-only Titanic placeholder.
+- README now shows sample output and compares VizJudge with dabl, AutoViz, LIDA and
+  ydata-profiling.
+
 ## 0.4.0 — 2026-10-14
 
 - Added a deterministic Agent loop: plan, profile, bounded Python analysis,
