@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
+import base64
 import functools
 import hashlib
+import json
 from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
+import pydantic_core
 from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
+from mcp.types import CallToolResult, ImageContent, TextContent
 
 from vizjudge.agent import ExecutionBudget
 from vizjudge.agent import run_agent as run_agent_analysis
-from vizjudge.agent.judge import judge_report
-from vizjudge.agent.runner import BudgetExceeded, _Executor, _refine
+from vizjudge.agent.judge import chart_key, judge_report
+from vizjudge.agent.runner import BudgetExceeded, Executor, refine_report
 from vizjudge.agent.tools import describe_chart
 from vizjudge.core.report import analyze_dataset as run_analysis
 from vizjudge.core.validation import validate_top_k
@@ -35,17 +39,81 @@ server = MCPServer(
 )
 
 
-def _reported(tool: Callable[..., dict[str, Any]]) -> Callable[..., dict[str, Any]]:
+def _reported(tool: Callable[..., Any]) -> Callable[..., Any]:
     """Surface anticipated failures to the host model instead of a generic crash."""
 
     @functools.wraps(tool)
-    def wrapper(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return tool(*args, **kwargs)
         except (ValueError, TypeError, OSError, BudgetExceeded) as exc:
             raise ToolError(str(exc)) from exc
 
     return wrapper
+
+
+# Inline PNGs let hosts (Claude, DeepSeek Harness attachments) look at what they judge.
+# Caps keep a tool result well inside typical MCP message and context limits.
+MAX_IMAGE_BLOCKS = 8
+MAX_IMAGE_BYTES = 1_000_000
+MAX_TOTAL_IMAGE_BYTES = 4_000_000
+
+ToolResult = Annotated[CallToolResult, dict[str, Any]]
+
+
+def _with_images(
+    result: dict[str, Any], images: list[tuple[str, str, Path]], include: bool
+) -> CallToolResult:
+    """Return the structured result plus capped PNG image blocks for (id, title, path)."""
+    blocks: list[TextContent | ImageContent] = []
+    attached, omitted = [], []
+    total = 0
+    for chart_id, title, path in images if include else []:
+        try:
+            size = path.stat().st_size
+        except OSError:
+            omitted.append({"chart_id": chart_id, "reason": "file_missing"})
+            continue
+        if len(attached) >= MAX_IMAGE_BLOCKS:
+            reason = "max_image_blocks"
+        elif size > MAX_IMAGE_BYTES:
+            reason = "max_image_bytes"
+        elif total + size > MAX_TOTAL_IMAGE_BYTES:
+            reason = "max_total_image_bytes"
+        else:
+            reason = None
+        if reason:
+            omitted.append({"chart_id": chart_id, "reason": reason})
+            continue
+        total += size
+        attached.append(chart_id)
+        blocks.append(TextContent(type="text", text=f"Chart {chart_id}: {title}"))
+        blocks.append(
+            ImageContent(
+                type="image",
+                data=base64.b64encode(path.read_bytes()).decode("ascii"),
+                mime_type="image/png",
+            )
+        )
+    if images:
+        result["image_content"] = {
+            "included": include,
+            "attached": attached,
+            "omitted": omitted,
+        }
+    structured = json.loads(pydantic_core.to_json(result, fallback=str))
+    text = pydantic_core.to_json(result, fallback=str, indent=2).decode()
+    return CallToolResult(
+        content=[TextContent(type="text", text=text), *blocks], structured_content=structured
+    )
+
+
+def _report_images(report: dict[str, Any], output_dir: Path) -> list[tuple[str, str, Path]]:
+    return [
+        (chart_key(chart), chart["title"], output_dir / chart["image"])
+        for chart in report.get("ranked_charts", [])
+        if chart.get("image")
+    ]
 
 
 def _limits(budget: dict[str, Any] | None) -> ExecutionBudget:
@@ -73,11 +141,12 @@ def _execute(
     if source.stat().st_size > limits.max_input_bytes:
         raise ValueError("Dataset exceeds max_input_bytes")
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
-    executor = _Executor(limits)
+    executor = Executor(limits)
     result = executor.call(
         tool,
         {
             "path": str(source),
+            "dataset_sha256": digest,
             "max_input_bytes": limits.max_input_bytes,
             "max_rows": limits.max_rows,
             "seed": seed,
@@ -255,7 +324,7 @@ def select_charts(
     before = [describe_chart(chart)["chart_id"] for chart in report["ranked_charts"]]
     applied = refine and judgment["refinement"] != "none"
     if applied:
-        report = _refine(report, judgment, judgment["refinement"])
+        report = refine_report(report, judgment, judgment["refinement"])
     by_id = {review["chart_id"]: review for review in judgment["reviews"]}
     charts = []
     for chart in report["ranked_charts"]:
@@ -284,13 +353,18 @@ def render_charts(
     role_overrides: dict[str, str] | None = None,
     seed: int = 42,
     budget: dict[str, Any] | None = None,
-) -> dict[str, Any]:
+    include_images: bool = True,
+) -> ToolResult:
     """Render chart IDs, in the given order, to PNG files up to budget.max_rendered_charts.
 
-    Pass the same target, task and role_overrides that produced the chart IDs.
+    Pass the same target, task and role_overrides that produced the chart IDs. Unless
+    include_images is false, the PNGs are also returned as image content (at most 8,
+    1 MB each, 4 MB total) after the JSON result, each preceded by its chart_id.
     """
     limits = _limits(budget)
-    return _execute(
+    if not isinstance(include_images, bool):
+        raise ValueError("include_images must be a boolean")
+    result = _execute(
         "render_ids",
         path,
         limits,
@@ -306,6 +380,8 @@ def render_charts(
             "max_candidates": limits.max_candidates,
         },
     )
+    images = [(item["chart_id"], item["title"], Path(item["path"])) for item in result["rendered"]]
+    return _with_images(result, images, include_images)
 
 
 @server.tool()
@@ -322,9 +398,14 @@ def analyze_dataset(
     seed: int = 42,
     baseline_features: list[str] | None = None,
     diversity: bool = True,
-) -> dict[str, Any]:
-    """Judge useful charts in a local dataset and recommend the next ML actions."""
-    return run_analysis(
+    include_images: bool = True,
+) -> ToolResult:
+    """Judge useful charts in a local dataset and recommend the next ML actions.
+
+    When rendering, the PNGs are also returned as capped image content unless
+    include_images is false.
+    """
+    report = run_analysis(
         path,
         target=target,
         task=task,
@@ -338,6 +419,8 @@ def analyze_dataset(
         top_k=top_k,
         render=render,
     )
+    images = _report_images(report, Path(output_dir).expanduser().resolve()) if render else []
+    return _with_images(report, images, include_images is True)
 
 
 @server.tool()
@@ -355,12 +438,15 @@ def run_agent(
     baseline_features: list[str] | None = None,
     budget: dict[str, Any] | None = None,
     judge: dict[str, str] | None = None,
-) -> dict[str, Any]:
+    include_images: bool = True,
+) -> ToolResult:
     """Plan, execute bounded Python tools, judge cited evidence, and refine charts.
 
     Judge defaults to statistical-only; file replays or HTTP calls must be explicit.
+    When rendering, the PNGs are also returned as capped image content unless
+    include_images is false.
     """
-    return run_agent_analysis(
+    report = run_agent_analysis(
         path,
         target=target,
         output_dir=output_dir,
@@ -375,6 +461,8 @@ def run_agent(
         budget=ExecutionBudget(**(budget or {})),
         judge=judge,
     )
+    images = _report_images(report, Path(output_dir).expanduser().resolve()) if render else []
+    return _with_images(report, images, include_images is True)
 
 
 def main() -> None:

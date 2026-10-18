@@ -7,19 +7,20 @@ import sys
 from pathlib import Path
 
 from vizjudge.agent.judge import file_judge, http_judge, judge_report
-from vizjudge.agent.runner import _refine
+from vizjudge.agent.runner import refine_report
 from vizjudge.agent.tools import list_candidates, render_chart_ids, validate_features
 from vizjudge.charts.generator import ChartCandidate
-from vizjudge.core.loader import load_dataset
+from vizjudge.core.cache import load_sampled
 from vizjudge.core.profiler import profile_dataframe
-from vizjudge.core.report import _render, _safe_filename, analyze_frame
+from vizjudge.core.report import analyze_frame, render_chart, safe_filename
 from vizjudge.core.type_infer import infer_types
 
 
-def execute(request: dict) -> dict:
+def execute(request: dict, meta: dict | None = None) -> dict:
+    """Run one allowlisted tool; dataset cache details are written into ``meta``."""
     tool = request["tool"]
     if tool == "refine":
-        return _refine(request["report"], request["judgment"], request["action"])
+        return refine_report(request["report"], request["judgment"], request["action"])
     if tool == "judge":
         adapter = request.get("judge")
         llm = None
@@ -38,10 +39,14 @@ def execute(request: dict) -> dict:
     source = Path(request["path"])
     if source.stat().st_size > request["max_input_bytes"]:
         raise ValueError("Dataset exceeds max_input_bytes")
-    frame = load_dataset(source)
-    original_rows = len(frame)
-    if original_rows > request["max_rows"]:
-        frame = frame.sample(request["max_rows"], random_state=request["seed"])
+    frame, original_rows, cache = load_sampled(
+        source,
+        max_rows=request["max_rows"],
+        seed=request["seed"],
+        expected_sha256=request.get("dataset_sha256"),
+    )
+    if meta is not None:
+        meta["cache"] = cache
     sampling = {
         "original_rows": original_rows,
         "analyzed_rows": len(frame),
@@ -60,8 +65,8 @@ def execute(request: dict) -> dict:
                 if name in ChartCandidate.__dataclass_fields__
             }
             candidate = ChartCandidate(**fields)
-            filename = f"{index:02d}-{_safe_filename(candidate.key)}.png"
-            _render(frame, candidate, Path(request["output_dir"]) / filename)
+            filename = f"{index:02d}-{safe_filename(candidate.key)}.png"
+            render_chart(frame, candidate, Path(request["output_dir"]) / filename)
             chart["image"] = filename
         return report
     if tool == "profile":
@@ -94,7 +99,8 @@ def execute(request: dict) -> dict:
 def main() -> int:
     try:
         request = json.load(sys.stdin)
-        result = {"ok": True, "result": execute(request)}
+        meta: dict = {}
+        result = {"ok": True, "result": execute(request, meta), **meta}
     except Exception as exc:
         result = {"ok": False, "error_type": type(exc).__name__, "error": str(exc)}
     print(json.dumps(result, ensure_ascii=False, allow_nan=False))

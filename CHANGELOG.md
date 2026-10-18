@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased
+
+- Workers now cache the loaded, budget-sampled dataset per user (keyed by source
+  SHA-256, size, mtime, `max_rows`, `seed` and pandas version; 7-day expiry, 512 MB LRU
+  cap, `VIZJUDGE_CACHE_DIR` / `VIZJUDGE_CACHE_MAX_BYTES` / `VIZJUDGE_NO_CACHE`), so a
+  fine-grained MCP flow parses the file once instead of five times. Trace events record
+  `cache.status`, and workers reject a source whose SHA-256 differs from the one the
+  caller recorded.
+- `render_charts`, and `run_agent` / `analyze_dataset` when rendering, return the PNGs
+  as MCP image content (at most 8, 1 MB each, 4 MB total; `include_images: false` to
+  opt out). The structured result is unchanged apart from an additive `image_content`
+  summary.
+- Timing of the breast_cancer MCP flow (profile → candidates → validate → select →
+  render 4 charts, seed 42, cold cache per flow, 5 interleaved runs, Windows,
+  Python 3.12): the 125 KB example is unchanged within noise (median 5.12 s before,
+  4.77 s after) because each call is dominated by ~0.8 s of worker start-up; parsing it
+  takes 10 ms. On the same data replicated to 100,144 rows (28 MB, `max_rows` 10,000)
+  a cached load takes 0.03 s instead of 0.62 s per call and the flow median drops from
+  9.36 s to 8.41 s (a warm-cache flow: 6.0–6.6 s).
+- Renamed helpers that were imported across modules: `Executor`, `refine_report`,
+  `render_chart`, `safe_filename` and `markdown_summary` (previously underscored).
+- Added `.gitattributes` (`* text=auto eol=lf`, binary PNG/Parquet/pickle).
+
 ## 0.5.0 — 2026-10-17
 
 - Made the agent integration distributable: the wheel bundles the skill, and new CLI

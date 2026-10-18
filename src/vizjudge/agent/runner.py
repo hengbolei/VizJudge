@@ -18,7 +18,7 @@ from typing import Any
 from vizjudge._version import SCHEMA_VERSION, __version__
 from vizjudge.agent.judge import chart_key
 from vizjudge.charts.generator import ChartCandidate
-from vizjudge.core.report import _markdown_summary
+from vizjudge.core.report import markdown_summary
 from vizjudge.core.validation import validate_top_k
 from vizjudge.recommendations.feature_engineering import recommend_features
 from vizjudge.recommendations.modeling import recommend_models
@@ -70,7 +70,9 @@ def _digest(value: Any) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
-class _Executor:
+class Executor:
+    """Run allowlisted tools in bounded worker subprocesses and record an audit trace."""
+
     def __init__(self, budget: ExecutionBudget):
         self.budget = budget
         self.started = time.monotonic()
@@ -111,6 +113,10 @@ class _Executor:
                 "LOCALAPPDATA",
                 "APPDATA",
                 "MPLCONFIGDIR",
+                "XDG_CACHE_HOME",
+                "VIZJUDGE_CACHE_DIR",
+                "VIZJUDGE_CACHE_MAX_BYTES",
+                "VIZJUDGE_NO_CACHE",
             }
         }
         env["PYTHONPATH"] = str(Path(__file__).resolve().parents[2])
@@ -135,6 +141,8 @@ class _Executor:
                 raise ValueError(envelope["error"])
             if result.returncode:
                 raise ValueError("Python worker exited unsuccessfully")
+            if "cache" in envelope:
+                event["cache"] = envelope["cache"]
             event.update(status="completed", output_sha256=_digest(envelope["result"]))
             return envelope["result"]
         except subprocess.TimeoutExpired as exc:
@@ -147,7 +155,8 @@ class _Executor:
             event["duration_seconds"] = round(time.monotonic() - started, 6)
 
 
-def _refine(report: dict[str, Any], judgment: dict[str, Any], action: str) -> dict[str, Any]:
+def refine_report(report: dict[str, Any], judgment: dict[str, Any], action: str) -> dict[str, Any]:
+    """Apply one allowed refinement action and refresh the dependent recommendations."""
     priorities = {item["chart_id"]: item for item in judgment["reviews"]}
     charts = list(report["ranked_charts"])
     if action == "prefer_validated":
@@ -235,7 +244,7 @@ def run_agent(
         judge = {**judge, "path": str(Path(judge["path"]).expanduser().resolve())}
     destination = Path(output_dir).expanduser().resolve()
     destination.mkdir(parents=True, exist_ok=True)
-    executor = _Executor(limits)
+    executor = Executor(limits)
     plan = [
         {"tool": "profile", "purpose": "Inspect data quality and establish sampling scope."},
         {"tool": "analyze", "purpose": "Validate candidate signals before rendering."},
@@ -248,6 +257,7 @@ def run_agent(
     ]
     request = {
         "path": str(source),
+        "dataset_sha256": dataset_hash,
         "max_input_bytes": limits.max_input_bytes,
         "max_rows": limits.max_rows,
         "seed": seed,
@@ -384,7 +394,7 @@ def run_agent(
     (destination / "execution.json").write_text(
         json.dumps(report["agent"], indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8"
     )
-    summary = _markdown_summary(report) if "profile" in report else "# VizJudge Agent report\n"
+    summary = markdown_summary(report) if "profile" in report else "# VizJudge Agent report\n"
     summary += f"\n## Agent execution\n\n- Status: {status}\n- Stop reason: {stop_reason}\n"
     for chart in report["ranked_charts"]:
         review = chart.get("judgment")

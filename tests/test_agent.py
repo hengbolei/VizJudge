@@ -7,7 +7,7 @@ import pytest
 
 from vizjudge.agent import ExecutionBudget, run_agent
 from vizjudge.agent.judge import build_evidence, judge_report
-from vizjudge.agent.runner import BudgetExceeded, _Executor
+from vizjudge.agent.runner import BudgetExceeded, Executor
 from vizjudge.agent.worker import execute
 from vizjudge.core.report import analyze_frame
 
@@ -86,7 +86,7 @@ def test_worker_timeout_is_recorded(monkeypatch):
         raise subprocess.TimeoutExpired(args[0], 0.01)
 
     monkeypatch.setattr(subprocess, "run", timed_out)
-    executor = _Executor(ExecutionBudget(python_timeout_seconds=0.01))
+    executor = Executor(ExecutionBudget(python_timeout_seconds=0.01))
     with pytest.raises(BudgetExceeded):
         executor.call("profile", {}, "Test timeout")
     assert executor.trace[0]["status"] == "timeout"
