@@ -1,5 +1,7 @@
 # VizJudge
 
+**English** | [简体中文](README.zh-CN.md)
+
 **Generate candidate visualizations, judge which charts are worth attention, and turn the
 evidence into machine-learning actions.**
 
