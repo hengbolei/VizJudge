@@ -1,5 +1,7 @@
 import asyncio
+import base64
 import json
+from pathlib import Path
 
 import pandas as pd
 from mcp import Client
@@ -248,3 +250,85 @@ def test_mcp_fine_grained_tools_enforce_budget(tmp_path) -> None:
     assert result.is_error
     result = _call("profile_dataset", {"path": str(path), "budget": {"max_rows": 0}})
     assert result.is_error
+
+
+def test_mcp_render_charts_returns_png_image_content(tmp_path) -> None:
+    path = _leaky_dataset(tmp_path)
+    selection = _call(
+        "select_charts", {"path": str(path), "target": "target", "validation": False}
+    ).structured_content
+    ids = selection["selection"]["after"][:2]
+    arguments = {
+        "path": str(path),
+        "target": "target",
+        "chart_ids": ids,
+        "output_dir": str(tmp_path / "charts"),
+    }
+    result = _call("render_charts", arguments)
+    assert not result.is_error
+    content = result.structured_content
+    # The structured result is unchanged apart from the additive image summary.
+    assert json.loads(result.content[0].text) == content
+    assert [item["chart_id"] for item in content["rendered"]] == ids
+    assert content["image_content"] == {"included": True, "attached": ids, "omitted": []}
+    images = [block for block in result.content if block.type == "image"]
+    captions = [block.text for block in result.content[1:] if block.type == "text"]
+    assert len(images) == 2
+    assert all(block.mime_type == "image/png" for block in images)
+    for block, item in zip(images, content["rendered"], strict=True):
+        assert base64.b64decode(block.data) == Path(item["path"]).read_bytes()
+    assert captions == [
+        f"Chart {item['chart_id']}: {item['title']}" for item in content["rendered"]
+    ]
+    trace = content["execution"]["trace"]
+    assert trace[0]["cache"]["status"] == "hit"  # select_charts already cached the frame.
+
+    plain = _call("render_charts", {**arguments, "include_images": False})
+    assert [block.type for block in plain.content] == ["text"]
+    assert plain.structured_content["image_content"]["attached"] == []
+
+
+def test_mcp_image_content_respects_size_caps(tmp_path, monkeypatch) -> None:
+    from vizjudge.mcp import server as module
+
+    path = _leaky_dataset(tmp_path)
+    selection = _call(
+        "select_charts", {"path": str(path), "target": "target", "validation": False}
+    ).structured_content
+    monkeypatch.setattr(module, "MAX_IMAGE_BYTES", 10)
+    result = _call(
+        "render_charts",
+        {
+            "path": str(path),
+            "target": "target",
+            "chart_ids": selection["selection"]["after"][:2],
+            "output_dir": str(tmp_path / "charts"),
+        },
+    )
+    assert not result.is_error
+    assert not [block for block in result.content if block.type == "image"]
+    omitted = result.structured_content["image_content"]["omitted"]
+    assert {item["reason"] for item in omitted} == {"max_image_bytes"}
+
+
+def test_mcp_agent_returns_rendered_images(tmp_path) -> None:
+    path = _leaky_dataset(tmp_path)
+    result = _call(
+        "run_agent",
+        {
+            "path": str(path),
+            "target": "target",
+            "output_dir": str(tmp_path / "agent"),
+            "validation": False,
+            "budget": {"max_rendered_charts": 2},
+        },
+    )
+    assert not result.is_error
+    images = [block for block in result.content if block.type == "image"]
+    rendered = [c for c in result.structured_content["ranked_charts"] if c["image"]]
+    assert len(images) == len(rendered) == 2
+    statuses = [
+        event.get("cache", {}).get("status")
+        for event in result.structured_content["agent"]["trace"]
+    ]
+    assert statuses[0] == "miss" and "hit" in statuses

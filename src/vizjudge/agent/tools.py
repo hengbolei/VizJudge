@@ -14,7 +14,7 @@ import pandas as pd
 
 from vizjudge.agent.judge import chart_evidence, chart_key
 from vizjudge.charts.generator import ChartCandidate, generate_candidates
-from vizjudge.core.report import _render, _safe_filename
+from vizjudge.core.report import render_chart, safe_filename
 from vizjudge.core.type_infer import ROLE_CATEGORICAL, ROLE_NUMERIC, infer_types, resolve_task
 from vizjudge.scoring.predictive import MAX_FEATURES, validate_predictive_value
 from vizjudge.scoring.rules import judge_candidate
@@ -182,8 +182,8 @@ def render_chart_ids(
             skipped.append(chart_id)
             continue
         candidate = pool[chart_id]
-        filename = f"{index:02d}-{_safe_filename(candidate.key)}.png"
-        _render(frame, candidate, destination / filename)
+        filename = f"{index:02d}-{safe_filename(candidate.key)}.png"
+        render_chart(frame, candidate, destination / filename)
         rendered.append(
             {
                 "chart_id": chart_id,

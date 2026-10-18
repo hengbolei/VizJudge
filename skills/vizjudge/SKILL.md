@@ -44,7 +44,9 @@ call; otherwise chart and evidence IDs will not line up.
    statistical verdicts. Then judge (below) and call `select_charts` again with your
    `reviews` and `refinement`.
 6. `render_charts(path, chart_ids=[...], output_dir=...)` — render only the final
-   selection, in the order you will present it.
+   selection, in the order you will present it. The PNGs come back as image content
+   (each captioned with its `chart_id`); look at them before presenting a chart, and
+   say so if a plot does not show what its evidence claims.
 
 `run_agent` (and CLI `vizjudge agent`) runs the whole deterministic loop as a single
 reproducible batch; prefer it for CI or when the user wants an audit record rather

@@ -23,7 +23,7 @@ the host model calls fine-grained MCP tools and acts as the Judge. The built-in
 | `generate_candidates` | Every candidate with heuristic score, warnings, `chart_id`, evidence IDs |
 | `validate_features` | Held-out incremental gain per named feature, with its chart's evidence IDs |
 | `select_charts` | Diverse validated selection, statistical verdicts, optional host reviews and one refinement |
-| `render_charts` | PNGs for chosen chart IDs, in order, within the image budget |
+| `render_charts` | PNGs for chosen chart IDs, in order, within the image budget, also returned as image content |
 
 Chart IDs and evidence IDs are the same ones `judge_report` and the batch loop use,
 so a host can cite `C<hash>.incremental_gain` from `validate_features` in a
@@ -44,7 +44,24 @@ same bounded worker subprocess as the batch loop (input bytes, row sampling,
 candidate cap, per-call timeout, image cap). Each result carries `execution` with
 the dataset SHA-256, budget and tool trace. Anticipated failures (unknown columns,
 uncited evidence, exhausted budget) are returned to the host as tool errors with
-their reason. The skill describes the recommended call order, leakage review and
+their reason.
+
+`render_charts`, and `run_agent` / `analyze_dataset` when they render, also return the
+PNGs as MCP image content after the JSON result, each preceded by a
+`Chart <chart_id>: <title>` caption, so the host can look at what it judges. At most 8
+images, 1 MB each and 4 MB in total are attached; `image_content` in the structured
+result lists attached and omitted chart IDs. Pass `include_images: false` for paths
+only.
+
+Workers cache the loaded, budget-sampled frame on disk, so a profile → candidates →
+validate → select → render flow parses the file once. Entries are keyed by the
+source's SHA-256, size and mtime, `max_rows`, `seed` and the pandas version, and live
+in `%LOCALAPPDATA%izjudgerames` (Windows) or `$XDG_CACHE_HOME/vizjudge/frames`
+(default `~/.cache`). They expire after 7 days and are evicted least-recently-used
+beyond 512 MB. Each trace event records `cache.status` (`hit`, `miss`,
+`miss_uncached`, `disabled`). Set `VIZJUDGE_CACHE_DIR` to move the cache (keep it
+private to your user; entries are pickles), `VIZJUDGE_CACHE_MAX_BYTES` to resize it,
+or `VIZJUDGE_NO_CACHE=1` to turn it off. The skill describes the recommended call order, leakage review and
 how to turn results into code changes.
 
 ## Batch mode: `vizjudge agent`

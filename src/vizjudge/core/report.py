@@ -31,12 +31,14 @@ from vizjudge.scoring.ranker import rank_candidates
 from vizjudge.scoring.rules import judge_candidate
 
 
-def _safe_filename(value: str) -> str:
+def safe_filename(value: str) -> str:
+    """Turn a chart key into a short, filesystem-safe PNG stem."""
     cleaned = re.sub(r"[^a-zA-Z0-9._-]+", "-", value).strip("-_").lower()
     return cleaned[:100] or "chart"
 
 
-def _render(frame: pd.DataFrame, candidate: ChartCandidate, path: Path) -> None:
+def render_chart(frame: pd.DataFrame, candidate: ChartCandidate, path: Path) -> None:
+    """Render one candidate with the renderer matching its chart kind."""
     if candidate.kind in {"histogram", "scatter"}:
         render_numeric(frame, candidate, path)
     elif candidate.kind == "category_bar":
@@ -111,8 +113,8 @@ def analyze_frame(
         destination.mkdir(parents=True, exist_ok=True)
     if render and destination is not None:
         for rank, candidate in enumerate(ranked, start=1):
-            filename = f"{rank:02d}-{_safe_filename(candidate.key)}.png"
-            _render(frame, candidate, destination / filename)
+            filename = f"{rank:02d}-{safe_filename(candidate.key)}.png"
+            render_chart(frame, candidate, destination / filename)
             candidate.image = filename
 
     recommendations = {
@@ -152,7 +154,7 @@ def analyze_frame(
         (destination / "report.json").write_text(
             json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8"
         )
-        (destination / "summary.md").write_text(_markdown_summary(report), encoding="utf-8")
+        (destination / "summary.md").write_text(markdown_summary(report), encoding="utf-8")
     return report
 
 
@@ -193,7 +195,8 @@ def analyze_dataset(
     )
 
 
-def _markdown_summary(report: dict[str, Any]) -> str:
+def markdown_summary(report: dict[str, Any]) -> str:
+    """Summarize a report as Markdown for summary.md."""
     lines = [
         "# VizJudge report",
         "",
