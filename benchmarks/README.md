@@ -35,7 +35,7 @@ from ranks and win counts.
 | name | what it does |
 |---|---|
 | `vizjudge` | `analyze_frame(..., validation=True)`; feature order of the target charts in `ranked_charts` |
-| `vizjudge_heuristic` | same with `validation=False` (heuristic scores only), an ablation of the ridge check |
+| `vizjudge_heuristic` | same with `validation=False` (heuristic scores only), an ablation of the predictive check and forward selection |
 | `mutual_info` | scikit-learn mutual information (categoricals as discrete codes) |
 | `ppscore` | `ppscore.predictors` order |
 | `dabl` | dabl's own plot-ranking criteria (ANOVA F / \|Spearman\| for continuous, discrete MI for categorical) on `dabl.detect_types`, interleaved because dabl ranks the two groups separately |
