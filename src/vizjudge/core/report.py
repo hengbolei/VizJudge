@@ -22,7 +22,11 @@ from vizjudge.core.validation import validate_top_k
 from vizjudge.recommendations.data_quality import recommend_data_quality
 from vizjudge.recommendations.feature_engineering import recommend_features
 from vizjudge.recommendations.modeling import recommend_models
-from vizjudge.scoring.predictive import validate_options, validate_predictive_value
+from vizjudge.scoring.predictive import (
+    FORWARD_STEPS,
+    validate_options,
+    validate_predictive_value,
+)
 from vizjudge.scoring.ranker import rank_candidates
 from vizjudge.scoring.rules import judge_candidate
 
@@ -88,6 +92,7 @@ def analyze_frame(
         cv_folds=cv_folds,
         seed=seed,
         baseline_features=baseline_features,
+        forward_steps=FORWARD_STEPS,
     )
     for candidate in candidates:
         if candidate.feature:

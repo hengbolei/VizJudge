@@ -16,3 +16,7 @@ build/
 # Generated VizJudge artifacts (keep the committed sample report)
 outputs/*
 !outputs/sample_report/
+!outputs/sample_report/README.md
+
+# Benchmark dataset downloads
+benchmarks/.cache/

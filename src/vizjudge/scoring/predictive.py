@@ -1,7 +1,10 @@
 """Bounded, deterministic predictive checks with training-fold-only preprocessing.
 
 These ridge baselines measure incremental value for IID splits; they are not a
-substitute for grouped/temporal validation or model selection.
+substitute for grouped/temporal validation or model selection. Numeric features are
+winsorized and expanded into quantile-bin indicators fit on the training fold, so the
+additive ridge model captures nonlinear, tree-like step effects and is not dominated
+by outliers. Classification is scored by threshold-free ROC-AUC.
 """
 
 from __future__ import annotations
@@ -14,6 +17,8 @@ import pandas as pd
 MAX_ROWS = 5000
 MAX_FEATURES = 20
 MAX_LEVELS = 20
+NUMERIC_BINS = 8
+FORWARD_STEPS = 10
 
 
 def validate_options(cv_folds: int, seed: int, baseline_features: list[str] | None) -> None:
@@ -31,9 +36,18 @@ def validate_options(cv_folds: int, seed: int, baseline_features: list[str] | No
 
 
 def _design(
-    train: pd.DataFrame, test: pd.DataFrame, features: list[str], roles: dict[str, str]
+    train: pd.DataFrame,
+    test: pd.DataFrame,
+    features: list[str],
+    roles: dict[str, str],
+    *,
+    bins: int = 0,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Fit medians, scales and capped category vocabulary on train alone."""
+    """Fit medians, scales, bin edges and capped category vocabulary on train alone.
+
+    With ``bins > 0`` numeric values are clipped to the training 1st-99th percentiles
+    and also encoded as indicators of training-quantile bins.
+    """
     train_parts = [np.ones((len(train), 1))]
     test_parts = [np.ones((len(test), 1))]
     for name in features:
@@ -42,6 +56,15 @@ def _design(
             right = test[name].to_numpy(dtype=float, na_value=np.nan)
             median = float(np.nanmedian(left)) if np.isfinite(left).any() else 0.0
             left, right = np.nan_to_num(left, nan=median), np.nan_to_num(right, nan=median)
+            if bins:
+                low, high = np.quantile(left, [0.01, 0.99])
+                left, right = np.clip(left, low, high), np.clip(right, low, high)
+                edges = np.unique(np.quantile(left, np.linspace(0, 1, bins + 1)[1:-1]))
+                left_bins = np.searchsorted(edges, left, side="left")
+                right_bins = np.searchsorted(edges, right, side="left")
+                for index in range(1, len(edges) + 1):
+                    train_parts.append((left_bins == index).astype(float)[:, None])
+                    test_parts.append((right_bins == index).astype(float)[:, None])
             mean, scale = float(left.mean()), float(left.std())
             scale = scale if scale > 0 else 1.0
             train_parts.append(((left - mean) / scale)[:, None])
@@ -61,19 +84,64 @@ def _design(
     return np.concatenate(train_parts, axis=1), np.concatenate(test_parts, axis=1)
 
 
-def _predict(design: np.ndarray, test: np.ndarray, response: np.ndarray) -> np.ndarray:
-    penalty = np.eye(design.shape[1])
-    penalty[0, 0] = 0.0
-    weights = np.linalg.solve(design.T @ design + penalty, design.T @ response)
-    return test @ weights
+class _Fold:
+    """One train/test split with every feature encoded once and a cached Gram matrix.
+
+    Fitting a feature subset solves ridge (unit penalty, free intercept) on the
+    matching sub-block, which equals encoding and fitting that subset from scratch.
+    """
+
+    def __init__(
+        self,
+        train: pd.DataFrame,
+        test: pd.DataFrame,
+        names: list[str],
+        roles: dict[str, str],
+        response: np.ndarray,
+        actual: np.ndarray,
+        task: str,
+    ) -> None:
+        train_parts, test_parts = [np.ones((len(train), 1))], [np.ones((len(test), 1))]
+        self.columns: dict[str, np.ndarray] = {}
+        width = 1
+        for name in names:
+            left, right = _design(train, test, [name], roles, bins=NUMERIC_BINS)
+            train_parts.append(left[:, 1:])
+            test_parts.append(right[:, 1:])
+            self.columns[name] = np.arange(width, width + left.shape[1] - 1)
+            width += left.shape[1] - 1
+        design = np.concatenate(train_parts, axis=1)
+        self.test = np.concatenate(test_parts, axis=1)
+        self.gram = design.T @ design
+        self.cross = design.T @ response
+        self.actual, self.task = actual, task
+
+    def score(self, names: list[str]) -> float:
+        index = np.concatenate([[0], *(self.columns[name] for name in names)]).astype(int)
+        penalty = np.eye(len(index))
+        penalty[0, 0] = 0.0
+        weights = np.linalg.solve(self.gram[np.ix_(index, index)] + penalty, self.cross[index])
+        return _score(self.actual, self.test[:, index] @ weights, self.task)
+
+
+def _auc(positive: np.ndarray, scores: np.ndarray) -> float:
+    """Mann-Whitney ROC-AUC with average ranks for ties; constant scores give 0.5."""
+    ranks = pd.Series(scores).rank(method="average").to_numpy()
+    count = int(positive.sum())
+    other = len(positive) - count
+    if count == 0 or other == 0:
+        return 0.5
+    return float((ranks[positive].sum() - count * (count + 1) / 2) / (count * other))
 
 
 def _score(actual: np.ndarray, prediction: np.ndarray, task: str) -> float:
     if task == "regression":
         return float(np.sqrt(np.mean((actual - prediction) ** 2)))
-    predicted = prediction.argmax(axis=1)
+    if prediction.shape[1] == 2:
+        return _auc(actual == 1, prediction[:, 1] - prediction[:, 0])
+    # Macro one-vs-rest ROC-AUC over classes present in the held-out fold.
     return float(
-        np.mean([np.mean(predicted[actual == label] == label) for label in np.unique(actual)])
+        np.mean([_auc(actual == label, prediction[:, label]) for label in np.unique(actual)])
     )
 
 
@@ -88,8 +156,15 @@ def validate_predictive_value(
     cv_folds: int = 5,
     seed: int = 42,
     baseline_features: list[str] | None = None,
+    forward_steps: int = 0,
 ) -> dict[str, Any]:
-    """Compare baseline and baseline+feature on identical held-out folds."""
+    """Compare baseline and baseline+feature on identical held-out folds.
+
+    With ``forward_steps > 0`` a greedy forward selection then adds, step by step, the
+    feature with the largest held-out gain over the baseline plus earlier picks, and
+    records each feature's conditional gain (redundant features gain little,
+    complementary ones keep their value).
+    """
     validate_options(cv_folds, seed, baseline_features)
     baseline = list(baseline_features or [])
     for name in baseline:
@@ -100,7 +175,7 @@ def validate_predictive_value(
     result: dict[str, Any] = {
         "status": "skipped",
         "reason": None,
-        "method": "ridge_baseline",
+        "method": "binned_ridge_baseline",
         "split": "shuffled_stratified" if task == "classification" else "shuffled_kfold",
         "cv_folds": cv_folds,
         "seed": seed,
@@ -110,7 +185,7 @@ def validate_predictive_value(
         "row_count": 0,
         "excluded_target_rows": 0,
         "sampled": False,
-        "metric": "balanced_accuracy" if task == "classification" else "rmse",
+        "metric": "roc_auc" if task == "classification" else "rmse",
         "features": {},
         "warnings": [
             "IID folds do not protect against temporal, group, duplicate, or semantic leakage.",
@@ -156,28 +231,29 @@ def validate_predictive_value(
     if not selected:
         result["reason"] = "no_eligible_features"
         return result
-    baseline_scores: list[float] = []
-    feature_scores: dict[str, list[float]] = {name: [] for name in selected}
+    cache = []
     for test_indices in folds:
         train_mask = np.ones(len(subset), dtype=bool)
         train_mask[test_indices] = False
         train_indices = np.flatnonzero(train_mask)
-        train, test = subset.iloc[train_indices], subset.iloc[test_indices]
-        design, held_out = _design(train, test, baseline, roles)
-        base_score = _score(
-            actual[test_indices], _predict(design, held_out, response[train_indices]), task
-        )
-        baseline_scores.append(base_score)
-        for name in selected:
-            if name in baseline:
-                feature_scores[name].append(base_score)
-                continue
-            design, held_out = _design(train, test, [*baseline, name], roles)
-            feature_scores[name].append(
-                _score(
-                    actual[test_indices], _predict(design, held_out, response[train_indices]), task
-                )
+        cache.append(
+            _Fold(
+                subset.iloc[train_indices],
+                subset.iloc[test_indices],
+                list(dict.fromkeys([*baseline, *selected])),
+                roles,
+                response[train_indices],
+                actual[test_indices],
+                task,
             )
+        )
+    baseline_scores = [fold.score(baseline) for fold in cache]
+    feature_scores = {
+        name: baseline_scores
+        if name in baseline
+        else [fold.score([*baseline, name]) for fold in cache]
+        for name in selected
+    }
     result["status"] = "completed"
     result["baseline_score"] = round(float(np.mean(baseline_scores)), 6)
     for name, scores in feature_scores.items():
@@ -195,4 +271,60 @@ def validate_predictive_value(
             "fold_gains": [round(float(gain), 6) for gain in gains],
             "in_baseline": name in baseline,
         }
+    if forward_steps > 0:
+        result["forward_selection"] = _forward(
+            cache, baseline, baseline_scores, feature_scores, result, forward_steps
+        )
     return result
+
+
+def _gains(scores: list[float], reference: list[float], task: str) -> np.ndarray:
+    gains = np.array(scores) - np.array(reference)
+    return -gains if task == "regression" else gains
+
+
+def _forward(
+    cache: list[_Fold],
+    baseline: list[str],
+    baseline_scores: list[float],
+    feature_scores: dict[str, list[float]],
+    result: dict[str, Any],
+    steps: int,
+) -> dict[str, Any]:
+    """Greedy forward selection on the cached folds; annotates conditional gains."""
+    task = cache[0].task
+    chosen, reference = list(baseline), baseline_scores
+    remaining = [name for name in feature_scores if name not in baseline]
+    trial = {name: feature_scores[name] for name in remaining}
+    path = []
+    while remaining and len(path) < steps:
+        if path:
+            trial = {name: [fold.score([*chosen, name]) for fold in cache] for name in remaining}
+        mean_gain = {name: float(_gains(trial[name], reference, task).mean()) for name in remaining}
+        for name in remaining:
+            result["features"][name].update(
+                conditional_gain=round(mean_gain[name], 6),
+                conditional_score=round(float(np.mean(trial[name])), 6),
+                conditioned_on=list(chosen),
+            )
+        best = max(remaining, key=lambda name: mean_gain[name])
+        if mean_gain[best] <= 0:
+            break
+        path.append(
+            {
+                "feature": best,
+                "conditional_gain": round(mean_gain[best], 6),
+                "score": round(float(np.mean(trial[best])), 6),
+            }
+        )
+        chosen.append(best)
+        reference = trial[best]
+        remaining.remove(best)
+    return {
+        "status": "completed",
+        "max_steps": steps,
+        "steps": path,
+        "note": "Each step adds the feature with the largest mean held-out gain over the "
+        "baseline plus earlier steps; features never added report their gain over the "
+        "last conditioning set.",
+    }

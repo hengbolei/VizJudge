@@ -181,8 +181,10 @@ vizjudge --version
 
 This is an alpha-quality, local-first v0.5 implementation. The Agent loop,
 predictive checks, evidence-grounded Judge integration and execution budgets are
-implemented. Live Judge quality and downstream model outcomes still require
-benchmarks; image/OCR ingestion and OS-level sandboxing are future work. See the
+implemented. A first [downstream-model benchmark](docs/benchmark.md) shows VizJudge's
+feature priorities beat random selection but not mutual information or AutoViz for
+gradient boosting; Live Judge quality still needs benchmarks, and image/OCR ingestion and
+OS-level sandboxing are future work. See the
 [roadmap](docs/roadmap.md) and [schema migration guide](docs/report-schema.md).
 
 ## Development

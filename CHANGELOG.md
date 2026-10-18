@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- Added a downstream-model selection benchmark (`benchmarks/`, `docs/benchmark.md`).
+- Scoring changes driven by that benchmark (report schema 0.5, additive):
+  - Box charts score eta (sqrt of eta squared), so numeric and categorical
+    associations share the |r| scale.
+  - New type-agnostic `information_coefficient` (bias-corrected binned mutual
+    information mapped to the |r| scale), blended 50/50 with the linear association
+    into `relevance`.
+  - Predictive validation uses ROC-AUC for classification and a winsorized,
+    quantile-binned ridge baseline; the adjustment moves relevance halfway toward the
+    held-out strength (±15 points).
+  - Greedy forward selection records each feature's `conditional_gain`; scores average
+    marginal and conditional held-out strength, so near-duplicates are discounted.
+  - One-to-one categorical↔numeric re-encodings (e.g. `education`/`education-num`)
+    are penalized as redundant; the sparse-group penalty scales with the share of
+    sparse groups.
+
 ## 0.5.0 — 2026-10-17
 
 - Made the agent integration distributable: the wheel bundles the skill, and new CLI

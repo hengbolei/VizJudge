@@ -88,13 +88,16 @@ priority; it does not invent new statistics or change the original dataset.
 
 Validation uses seeded shuffled folds (stratified for classification), a ridge
 regression baseline or a ridge least-squares classifier, and identical folds for
-the baseline and baseline plus each feature. Classification measures balanced
-accuracy; regression measures RMSE. Positive `incremental_gain` means improvement
-for either task. By default the baseline contains only an intercept. `--baseline`
-adds existing features; each proposed feature is still added individually.
+the baseline and baseline plus each feature. Classification measures threshold-free
+ROC-AUC of the ridge scores (macro one-vs-rest for multiclass); regression measures
+RMSE. Positive `incremental_gain` means improvement for either task. By default the
+baseline contains only an intercept. `--baseline` adds existing features; each
+proposed feature is still added individually. Complete reports then run a greedy
+forward selection (up to 10 steps) on the same folds and record each feature's
+`conditional_gain` over the baseline plus earlier picks.
 
-Numeric medians, scaling, missingness indicators, and category vocabularies are
-fit on training folds alone. Categorical vocabularies are capped at 20 frequent
+Numeric medians, 1st–99th percentile clipping bounds, 8 quantile-bin edges, scaling,
+missingness indicators, and category vocabularies are fit on training folds alone. Categorical vocabularies are capped at 20 frequent
 levels; unknown levels map to the all-zero encoding. Validation is capped at 5,000
 labeled rows and 20 features, chosen by initial heuristic priority. Row sampling,
 skips, fold gains, and fold variability are explicit in the report. Classification
