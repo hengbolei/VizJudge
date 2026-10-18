@@ -31,7 +31,7 @@ def test_mcp_analyze_dataset_tool(tmp_path) -> None:
             )
             assert not result.is_error
             assert result.structured_content is not None
-            assert result.structured_content["schema_version"] == "0.4"
+            assert result.structured_content["schema_version"] == "0.5"
 
     asyncio.run(call_tool())
 

@@ -6,8 +6,26 @@ import pandas as pd
 
 from vizjudge.charts.generator import ChartCandidate
 from vizjudge.core.validation import validate_top_k
-from vizjudge.scoring.metrics import absolute_correlation
+from vizjudge.scoring.metrics import absolute_correlation, one_to_one_agreement
 from vizjudge.scoring.rules import judge_candidate
+
+
+def _redundancy(left: pd.Series, right: pd.Series) -> str | None:
+    """Name the redundancy between two features, or return None."""
+    if pd.api.types.is_numeric_dtype(left) and pd.api.types.is_numeric_dtype(right):
+        if absolute_correlation(left, right) >= 0.95:
+            return "absolute correlation at least 0.95"
+    else:
+        complete = left.notna() & right.notna()
+        if (
+            complete.sum() >= 30
+            and left[complete].astype(str).eq(right[complete].astype(str)).mean() >= 0.95
+        ):
+            return "values match in at least 95% of rows"
+    # Re-encodings such as education (strings) vs education-num (integers).
+    if one_to_one_agreement(left, right) >= 0.99:
+        return "one-to-one level mapping"
+    return None
 
 
 def rank_candidates(
@@ -25,7 +43,7 @@ def rank_candidates(
     }
     judged = [judge_candidate(frame, candidate) for candidate in unique.values()]
     selected: list[ChartCandidate] = []
-    similarity: dict[tuple[str, str], bool] = {}
+    similarity: dict[tuple[str, str], str | None] = {}
     while judged and len(selected) < top_k:
         for item in judged:
             penalty = 0.0
@@ -40,26 +58,13 @@ def rank_candidates(
                     if item.feature and previous.feature and item.feature != previous.feature:
                         pair = tuple(sorted((item.feature, previous.feature)))
                         if pair not in similarity:
-                            left, right = frame[pair[0]], frame[pair[1]]
-                            if pd.api.types.is_numeric_dtype(
-                                left
-                            ) and pd.api.types.is_numeric_dtype(right):
-                                similarity[pair] = absolute_correlation(left, right) >= 0.95
-                            else:
-                                complete = left.notna() & right.notna()
-                                similarity[pair] = bool(
-                                    complete.sum() >= 30
-                                    and (
-                                        left[complete]
-                                        .astype(str)
-                                        .eq(right[complete].astype(str))
-                                        .mean()
-                                        >= 0.95
-                                    )
-                                )
+                            similarity[pair] = _redundancy(frame[pair[0]], frame[pair[1]])
                         if similarity[pair]:
                             penalty = max(penalty, 20.0)
-                            reasons.append(f"Feature is redundant with {previous.feature}.")
+                            reasons.append(
+                                f"Feature is redundant with {previous.feature} "
+                                f"({similarity[pair]})."
+                            )
                 if any(previous.kind == item.kind for previous in selected):
                     penalty += 5.0
                     reasons.append("This chart family is already represented.")

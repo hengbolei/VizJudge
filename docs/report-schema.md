@@ -1,7 +1,9 @@
-# Report schema 0.4
+# Report schema 0.5
 
-Reports are JSON objects. `schema_version` is `"0.4"`; `vizjudge_version` is
-the package version (for example `"0.5.0"`; the schema is unchanged since 0.4.0). Existing `source`, `target`, `roles`, `profile`, `candidate_count`,
+Reports are JSON objects. `schema_version` is `"0.5"`; `vizjudge_version` is
+the package version. Schema 0.5 only adds fields and changes two enumerated values
+(see [Changes in 0.5](#changes-in-05)); a 0.4 reader that tolerates additional fields
+keeps working, but must not compare 0.4 and 0.5 gains directly. Existing `source`, `target`, `roles`, `profile`, `candidate_count`,
 `ranked_charts`, `recommendations`, and `generated_at` fields remain in complete
 reports. Profiles include frequent category values and should be handled as data.
 
@@ -41,3 +43,22 @@ Numbers are finite; reports are serialized with `allow_nan=False`.
 
 See [Agent execution](agent.md) for status and budget semantics. Consumers should
 check the schema version, read known fields, and tolerate additional fields.
+
+## Changes in 0.5
+
+Scoring changed after the [downstream-model benchmark](benchmark.md); see
+[Scoring](scoring.md). Report fields:
+
+- `predictive_validation.method` is `binned_ridge_baseline` (was `ridge_baseline`):
+  numeric features are winsorized and quantile-binned on the training fold.
+- `predictive_validation.metric` for classification is `roc_auc` (was
+  `balanced_accuracy`); macro one-vs-rest for multiclass. Regression stays `rmse`.
+- New `predictive_validation.forward_selection` for complete reports:
+  `status`, `max_steps`, `note`, and `steps` (each `feature`, `conditional_gain`,
+  `score`). `validate_features` (MCP) does not run forward selection.
+- Feature results may add `conditional_gain`, `conditional_score` and
+  `conditioned_on` (the feature list the gain is conditional on).
+- Chart `metrics` may add `eta` (sqrt of `eta_squared`, now the scored value for
+  box charts), `information_coefficient`, `relevance`, `held_out_strength` and
+  `conditional_gain`. Existing metric names, and therefore evidence IDs
+  (`C<hash>.<metric>`), are unchanged.
