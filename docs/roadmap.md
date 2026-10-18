@@ -34,5 +34,6 @@ No separate 0.2 or 0.3 release is claimed; the implementation moves from 0.1 to 
 - Plugin API for chart generators, scorers, and recommendation policies
 - Stable report schema and compatibility tests
 - Stronger dataset privacy controls and OS-level execution isolation
-- Benchmark suite linking chart selection to downstream model outcomes
+- Benchmark suite linking chart selection to downstream model outcomes (first version: [benchmark](benchmark.md); next: re-run after
+  scoring fixes and add Judge-quality tasks)
 
