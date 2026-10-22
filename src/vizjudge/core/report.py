@@ -28,7 +28,7 @@ from vizjudge.scoring.predictive import (
     validate_predictive_value,
 )
 from vizjudge.scoring.ranker import rank_candidates
-from vizjudge.scoring.rules import judge_candidate
+from vizjudge.scoring.rules import LEAKAGE_PREFIX, judge_candidate
 
 
 def safe_filename(value: str) -> str:
@@ -76,7 +76,7 @@ def analyze_frame(
     resolved_task = resolve_task(frame, roles, target, task, role_overrides)
     candidates = generate_candidates(frame, roles, target, max_candidates=max_candidates)
     for candidate in candidates:
-        judge_candidate(frame, candidate)
+        judge_candidate(frame, candidate, supervised=target is not None)
     features = list(
         dict.fromkeys(
             candidate.feature
@@ -107,6 +107,16 @@ def analyze_frame(
             )
     ranked = rank_candidates(frame, candidates, top_k=top_k, diversity=diversity)
     profile = profile_dataframe(frame, roles)
+    signal = assess_signal(predictive)
+    leakage = [
+        {
+            "chart": candidate.key,
+            "feature": candidate.feature,
+            "warning": next(item for item in candidate.warnings if item.startswith(LEAKAGE_PREFIX)),
+        }
+        for candidate in candidates
+        if candidate.metrics.get("leakage_suspect")
+    ]
 
     destination = Path(output_dir).expanduser().resolve() if output_dir else None
     if destination is not None:
@@ -144,8 +154,13 @@ def analyze_frame(
             "max_candidates": max_candidates,
         },
         "predictive_validation": predictive,
+        "signal_assessment": signal,
+        "leakage_alerts": leakage,
         "warnings": list(
-            dict.fromkeys(warning for candidate in ranked for warning in candidate.warnings)
+            dict.fromkeys(
+                ([signal["message"]] if signal["status"] == "no_signal" else [])
+                + [warning for candidate in ranked for warning in candidate.warnings]
+            )
         ),
         "ranked_charts": [candidate.to_dict() for candidate in ranked],
         "recommendations": recommendations,
@@ -156,6 +171,35 @@ def analyze_frame(
         )
         (destination / "summary.md").write_text(markdown_summary(report), encoding="utf-8")
     return report
+
+
+def assess_signal(predictive: dict[str, Any]) -> dict[str, Any]:
+    """Say whether any validated feature beats the permutation null.
+
+    Chart scores are relative, so a ranking always has a top chart; this is the
+    absolute check that lets the report say there is nothing worth acting on.
+    """
+    null = predictive.get("null_test")
+    if predictive["status"] != "completed" or not null or null["status"] != "completed":
+        return {
+            "status": "not_assessed",
+            "reason": predictive["reason"] or (null or {}).get("reason"),
+            "message": "Target signal was not assessed; chart ranking is heuristic only.",
+        }
+    if null["signal_detected"]:
+        return {
+            "status": "signal",
+            "p_value": null["p_value"],
+            "message": "The best validated feature beats the permutation null "
+            f"(p = {null['p_value']:.3f}).",
+        }
+    return {
+        "status": "no_signal",
+        "p_value": null["p_value"],
+        "message": "No validated feature beats a shuffled target "
+        f"(permutation p = {null['p_value']:.3f}); the charts are descriptive only and "
+        "do not show predictive signal.",
+    }
 
 
 def analyze_dataset(
@@ -217,10 +261,20 @@ def markdown_summary(report: dict[str, Any]) -> str:
         f"- Metric: {report['predictive_validation']['metric']}",
         f"- Folds: {report['configuration']['cv_folds']}; seed: {report['configuration']['seed']}",
         *(f"- {warning}" for warning in report["predictive_validation"]["warnings"]),
-        "",
-        "## Highest-value charts",
+        *(
+            [f"- Signal: {report['signal_assessment']['message']}"]
+            if "signal_assessment" in report
+            else []
+        ),
         "",
     ]
+    if report.get("leakage_alerts"):
+        lines.extend(["## Leakage alerts", ""])
+        lines.extend(
+            f"- `{alert['feature']}`: {alert['warning']}" for alert in report["leakage_alerts"]
+        )
+        lines.append("")
+    lines.extend(["## Highest-value charts", ""])
     if not report["ranked_charts"]:
         lines.append("No eligible chart candidates were generated.")
     for index, chart in enumerate(report["ranked_charts"], start=1):

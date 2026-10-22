@@ -65,3 +65,21 @@ def test_doctor_reports_checks(capsys):
     assert "[ok] vizjudge:" in output
     assert "bundled skill" in output
     assert code in {0, 1}
+
+
+def test_doctor_fails_until_a_current_skill_is_installed(tmp_path, monkeypatch):
+    from vizjudge import integrations
+
+    user_root = tmp_path / "user"
+    monkeypatch.setattr(integrations, "SKILL_TARGETS", {"agents": user_root})
+    monkeypatch.setattr(integrations, "PROJECT_SKILL_TARGETS", {})
+
+    def skill_row():
+        return next(row for row in integrations.doctor() if row[0] == "installed skill")
+
+    assert skill_row()[1] is False
+    installed = install_skill(user_root)
+    assert skill_row()[1] is True
+    (installed / "SKILL.md").write_text("stale copy", encoding="utf-8")
+    ok, detail = skill_row()[1:]
+    assert ok is False and "--force" in detail

@@ -14,19 +14,19 @@ VizJudge 不是又一个自动 EDA 报告生成器。它关心的核心问题不
 以下是在 Breast Cancer Wisconsin 数据集上的真实输出（569 行、30 个特征，共评判 60 张候选图，
 最终渲染 6 张）。完整报告见 [`outputs/sample_report`](outputs/sample_report/summary.md)。
 
-<img src="outputs/sample_report/01-target_box__diagnosis__worst_concave_points__diagnosis.png" alt="worst_concave_points by diagnosis" width="420">
+<img src="outputs/sample_report/01-target_box__diagnosis__worst_perimeter__diagnosis.png" alt="worst_perimeter by diagnosis" width="420">
 
 ```text
-### 1. worst_concave_points by target diagnosis — 91.7/100
-- strong group separation by eta squared (0.63)
-- Held-out balanced_accuracy gain over baseline: 0.4011 (positive is better).
+- Signal: The best validated feature beats the permutation null (p = 0.020).
+
+### 1. worst_perimeter by target diagnosis — 92.4/100
+- strong group separation by eta (0.78; eta squared 0.61)
+- Held-out roc_auc gain over baseline: 0.4730 (positive is better); held-out strength 0.95 vs in-sample relevance 0.78.
 - high confidence: positive incremental ridge-baseline gain in every held-out fold.
 
-### 2. Distribution of area_error — 85.0/100
-- absolute skew is 5.45 -> compare raw and monotonic transforms inside CV.
-
-### 3. worst_perimeter by target diagnosis — 89.9/100
-- Selection score: 84.9 (diversity penalty: 5.0): this chart family is already represented.
+### 2. worst_concave_points by target diagnosis — 79.4/100
+- Held-out roc_auc gain over baseline: 0.4643 (positive is better); held-out strength 0.47 vs in-sample relevance 0.78.
+- Selection score: 74.4 (diversity penalty: 5.0): this chart family is already represented.
 ```
 
 离线复现命令：

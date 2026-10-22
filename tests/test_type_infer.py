@@ -23,3 +23,20 @@ def test_infer_practical_roles() -> None:
         "constant": "constant",
         "event_date": "datetime",
     }
+
+
+def test_identifiers_are_detected_by_value_not_only_by_name() -> None:
+    frame = pd.DataFrame(
+        {
+            "row": range(1000, 1100),
+            "customer": [f"CUST-{index:05d}" for index in range(100)],
+            "count": [index * 3 for index in range(100)],
+            "segment": ["a", "b", "c", "d"] * 25,
+        }
+    )
+    roles = infer_types(frame)
+    assert roles["row"] == "identifier"
+    assert roles["customer"] == "identifier"
+    # Unique integers that are not a consecutive range stay measurements.
+    assert roles["count"] == "numeric"
+    assert roles["segment"] == "categorical"

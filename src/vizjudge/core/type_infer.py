@@ -36,6 +36,15 @@ def infer_series_type(series: pd.Series) -> str:
     if uniqueness >= 0.98 and identifier_name:
         return ROLE_IDENTIFIER
 
+    # By value, whatever the name: a consecutive integer range is a row index.
+    if (
+        ptypes.is_integer_dtype(series)
+        and count >= 30
+        and unique == count
+        and int(values.max()) - int(values.min()) == count - 1
+    ):
+        return ROLE_IDENTIFIER
+
     if ptypes.is_numeric_dtype(series):
         categorical_limit = max(10, min(30, int(math.sqrt(max(count, 1)))))
         if unique <= categorical_limit and not ptypes.is_float_dtype(series):
@@ -50,6 +59,9 @@ def infer_series_type(series: pd.Series) -> str:
         mean_length = float(sample.str.len().mean()) if len(sample) else 0.0
         if uniqueness > 0.8 and mean_length > 24:
             return ROLE_TEXT
+        # Near-unique short codes (UUIDs, customer keys) are keys, not categories.
+        if count >= 30 and uniqueness >= 0.98:
+            return ROLE_IDENTIFIER
         return ROLE_CATEGORICAL
 
     return ROLE_CATEGORICAL
