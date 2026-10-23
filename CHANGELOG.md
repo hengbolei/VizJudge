@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Fixes from an external review (all additive to report schema 0.5):
+  - With a target, distribution charts score only actionable shape (skew, rare levels),
+    so noise-column histograms no longer outrank features with target signal. On a
+    21-feature table the moderate feature moved from rank 23 to rank 2.
+  - Leakage: new `missingness_association` metric; the leakage warning now considers
+    every association, the information coefficient, missingness and held-out strength.
+    Suspects are selected first, listed in `leakage_alerts`, deferred by the
+    statistical judge, and survive statistical-only refinement. A post-outcome
+    column (gain 0.50, eta² 0) moved from rank 16/20 with no warning to rank 1, flagged.
+  - Permutation null (`predictive_validation.null_test`, `signal_assessment`): a report
+    on pure noise now says `no_signal` and labels every chart low confidence.
+  - `vizjudge doctor` fails when no current skill copy is installed (or only an
+    outdated one) and when the MCP server module cannot be imported.
+  - Identifiers are inferred from values as well as names (consecutive integer ranges,
+    near-unique short strings).
+  - `tests/test_chart_relevance.py` covers which charts surface, which the feature
+    selection benchmark does not measure.
+
 - Added a downstream-model selection benchmark (`benchmarks/`, `docs/benchmark.md`).
 - Scoring changes driven by that benchmark (report schema 0.5, additive):
   - Box charts score eta (sqrt of eta squared), so numeric and categorical

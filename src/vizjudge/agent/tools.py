@@ -32,7 +32,7 @@ def _judged(
 ) -> list[ChartCandidate]:
     candidates = generate_candidates(frame, roles, target, max_candidates=max_candidates)
     for candidate in candidates:
-        judge_candidate(frame, candidate)
+        judge_candidate(frame, candidate, supervised=target is not None)
     return candidates
 
 
@@ -121,7 +121,7 @@ def validate_features(
             name, {"status": "skipped", "reason": predictive["reason"]}
         )
         candidate = charts[name]
-        judge_candidate(frame, candidate)
+        judge_candidate(frame, candidate, supervised=target is not None)
         candidate.predictive = outcome
         chart = candidate.to_dict()
         results.append(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import json
 import shutil
@@ -120,11 +121,39 @@ def doctor() -> list[tuple[str, bool, str]]:
         name = f"{module} (optional)" if module == "pyarrow" else module
         checks.append((name, found or module == "pyarrow", "installed" if found else hint))
     try:
+        importlib.import_module(MCP_MODULE)
+        checks.append(("mcp server", True, f"python -m {MCP_MODULE}"))
+    except Exception as exc:  # noqa: BLE001 - any import failure means the server cannot start
+        checks.append(("mcp server", False, f"{MCP_MODULE} failed to import: {exc}"))
+    try:
+        bundled = (skill_source() / "SKILL.md").read_text(encoding="utf-8")
         checks.append(("bundled skill", True, str(skill_source())))
     except FileNotFoundError as exc:
         checks.append(("bundled skill", False, str(exc)))
-    for name, root in SKILL_TARGETS.items():
+        return checks
+    roots = [
+        *SKILL_TARGETS.values(),
+        *(Path.cwd() / root for root in PROJECT_SKILL_TARGETS.values()),
+    ]
+    current, stale = [], []
+    for root in roots:
         installed = root.expanduser() / SKILL_NAME / "SKILL.md"
-        detail = str(installed.parent) if installed.is_file() else "not installed"
-        checks.append((f"skill in {name}", True, detail))
+        if installed.is_file():
+            same = installed.read_text(encoding="utf-8") == bundled
+            (current if same else stale).append(str(installed.parent))
+    if current:
+        detail = ", ".join(current)
+        if stale:
+            detail += f" (outdated copies: {', '.join(stale)})"
+        checks.append(("installed skill", True, detail))
+    elif stale:
+        checks.append(
+            (
+                "installed skill",
+                False,
+                f"outdated at {', '.join(stale)}; run `vizjudge skill install --force`",
+            )
+        )
+    else:
+        checks.append(("installed skill", False, "not found; run `vizjudge skill install`"))
     return checks

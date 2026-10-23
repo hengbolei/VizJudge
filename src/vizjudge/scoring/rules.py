@@ -23,6 +23,16 @@ LINEAR_WEIGHT = 0.5
 # Held-out validation moves relevance toward the cross-validated strength.
 PREDICTIVE_WEIGHT = 0.5
 PREDICTIVE_CAP = 15.0
+# Distribution charts earn up to this many points for an actionable shape (skew, rare
+# levels). With a target they carry no target evidence, so a featureless distribution
+# scores like a targeted chart with zero relevance instead of outranking real signal.
+DISTRIBUTION_POINTS = 20.0
+# Any association or missingness association at this level is reviewed as possible
+# leakage. Held-out strength needs more: Somers' D 0.95 is ROC-AUC 0.975, which clean,
+# strong features reach (worst_perimeter in breast cancer is 0.946); 0.98 is AUC 0.99.
+LEAKAGE_THRESHOLD = 0.95
+HELD_OUT_LEAKAGE_THRESHOLD = 0.98
+LEAKAGE_PREFIX = "Near-perfect target signal"
 
 
 def _coverage(frame: pd.DataFrame, columns: list[str]) -> float:
@@ -72,6 +82,48 @@ def _relevance(
     return relevance
 
 
+def _missingness_association(frame: pd.DataFrame, candidate: ChartCandidate) -> float:
+    """Association between the feature's missingness and the target, on the |r| scale.
+
+    Complete-case metrics never see this: a column filled only after the outcome is
+    missing for one class, so eta and the information coefficient see a single group.
+    """
+    assert candidate.feature is not None and candidate.target is not None
+    rows = frame[candidate.target].notna()
+    missing = frame.loc[rows, candidate.feature].isna()
+    if missing.nunique() < 2:
+        return 0.0
+    target = frame.loc[rows, candidate.target]
+    if candidate.kind in {"target_box", "target_category"}:
+        return cramers_v(missing, target)
+    return math.sqrt(correlation_ratio(missing, target))
+
+
+def _leakage_signal(candidate: ChartCandidate) -> tuple[str, float] | None:
+    """Return the strongest near-perfect target signal as (metric, value), if any."""
+    names = (
+        "absolute_correlation",
+        "eta",
+        "cramers_v",
+        "information_coefficient",
+        "missingness_association",
+        "held_out_strength",
+    )
+    flagged = [
+        (name, float(candidate.metrics[name]))
+        for name in names
+        if name in candidate.metrics
+        and float(candidate.metrics[name])
+        >= (HELD_OUT_LEAKAGE_THRESHOLD if name == "held_out_strength" else LEAKAGE_THRESHOLD)
+    ]
+    return max(flagged, key=lambda item: item[1], default=None)
+
+
+def _rare_level_share(series: pd.Series) -> float:
+    counts = series.dropna().value_counts()
+    return float((counts < 5).mean()) if len(counts) else 0.0
+
+
 def _strength(metric: str, gain: float, score: float) -> float:
     """Map a held-out gain onto the |r| scale used by relevance.
 
@@ -103,8 +155,14 @@ def held_out_strength(predictive: dict[str, object]) -> float:
     return strength
 
 
-def judge_candidate(frame: pd.DataFrame, candidate: ChartCandidate) -> ChartCandidate:
-    """Mutate a candidate with a 0-100 score and concise evidence."""
+def judge_candidate(
+    frame: pd.DataFrame, candidate: ChartCandidate, *, supervised: bool = False
+) -> ChartCandidate:
+    """Mutate a candidate with a 0-100 score and concise evidence.
+
+    ``supervised`` marks an analysis with a target: distribution charts then score
+    only their actionable shape, so they cannot outrank target evidence by default.
+    """
     candidate.reasons.clear()
     candidate.observations.clear()
     candidate.warnings.clear()
@@ -125,7 +183,11 @@ def judge_candidate(frame: pd.DataFrame, candidate: ChartCandidate) -> ChartCand
         skew = 0.0 if pd.isna(skew) else skew
         candidate.metrics["skew"] = round(skew, 6)
         variability = 1.0 if values.nunique() >= 10 else values.nunique() / 10
-        score += 20.0 * variability + 20.0 * min(abs(skew) / 2, 1.0)
+        shape = min(abs(skew) / 2, 1.0)
+        if supervised:
+            score += DISTRIBUTION_POINTS * variability * shape
+        else:
+            score += 20.0 * variability + 20.0 * shape
         candidate.reasons.append(f"absolute skew is {abs(skew):.2f}")
         if abs(skew) >= 1:
             candidate.observations.append(
@@ -140,8 +202,16 @@ def judge_candidate(frame: pd.DataFrame, candidate: ChartCandidate) -> ChartCand
         entropy = normalized_entropy(frame[candidate.x])
         levels = int(frame[candidate.x].nunique(dropna=True))
         candidate.metrics.update(entropy=round(entropy, 6), levels=levels)
-        cardinality_penalty = max(0.0, min(20.0, (levels - 20) * 0.75))
-        score += 35.0 * entropy - cardinality_penalty
+        if supervised:
+            # Rare levels and high cardinality call for an encoding decision.
+            rare = _rare_level_share(frame[candidate.x])
+            candidate.metrics["rare_level_share"] = round(rare, 6)
+            interest = max(rare, min(1.0, max(0, levels - 20) / 30))
+            score += DISTRIBUTION_POINTS * interest
+            candidate.reasons.append(f"{rare:.0%} of levels have fewer than 5 rows")
+        else:
+            cardinality_penalty = max(0.0, min(20.0, (levels - 20) * 0.75))
+            score += 35.0 * entropy - cardinality_penalty
         candidate.reasons.append(f"normalized category entropy is {entropy:.2f}")
         if levels > 20:
             candidate.warnings.append(
@@ -234,23 +304,27 @@ def judge_candidate(frame: pd.DataFrame, candidate: ChartCandidate) -> ChartCand
     else:
         raise ValueError(f"Unsupported chart kind: {candidate.kind}")
     if candidate.kind not in {"histogram", "category_bar"}:
+        if coverage < 1.0:
+            missingness = _missingness_association(frame, candidate)
+            candidate.metrics["missingness_association"] = round(missingness, 6)
+            if missingness >= 0.3:
+                candidate.observations.append(
+                    f"Whether {candidate.feature} is missing is associated with "
+                    f"{candidate.target} ({missingness:.2f}); missingness is informative, "
+                    "or the column is only filled after the outcome."
+                )
+            if missingness > relevance:
+                relevance = missingness
+                candidate.metrics["relevance"] = round(relevance, 6)
+                candidate.reasons.append(
+                    f"relevance taken from missingness association ({missingness:.2f})"
+                )
         score += RELEVANCE_POINTS * relevance
 
     if sample_count < 30:
         score -= 20
         candidate.reasons.append("fewer than 30 complete observations; evidence is unstable")
         candidate.warnings.append("Fewer than 30 complete observations; evidence is unstable.")
-    if (
-        candidate.target
-        and candidate.metrics.get(
-            "absolute_correlation",
-            candidate.metrics.get("eta", candidate.metrics.get("cramers_v", 0)),
-        )
-        >= 0.95
-    ):
-        candidate.warnings.append(
-            "Near-perfect target association; review direct or proxy leakage."
-        )
     candidate.metrics["heuristic_score"] = round(max(0.0, min(100.0, score)), 1)
     if (
         candidate.predictive
@@ -271,6 +345,13 @@ def judge_candidate(frame: pd.DataFrame, candidate: ChartCandidate) -> ChartCand
             f"{candidate.predictive['incremental_gain']:.4f} (positive is better); "
             f"held-out strength {strength:.2f} vs in-sample relevance "
             f"{candidate.metrics['relevance']:.2f}."
+        )
+    leakage = _leakage_signal(candidate) if candidate.target else None
+    if leakage:
+        candidate.metrics["leakage_suspect"] = 1
+        candidate.warnings.append(
+            f"{LEAKAGE_PREFIX} ({leakage[0]} {leakage[1]:.2f}); review direct, "
+            "proxy or post-outcome leakage before using this feature."
         )
     candidate.score = round(max(0.0, min(100.0, score)), 1)
     return candidate

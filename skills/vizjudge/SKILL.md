@@ -72,6 +72,9 @@ Without MCP, run `vizjudge agent <path> [--target <column>] --output <dir>` and 
   action (a split, a transform, a test), not "investigate further".
 - `confidence` labels are prioritization labels, not probabilities. High requires ≥100
   complete observations, positive gain in every fold and no chart warnings.
+- If `signal_assessment.status` is `no_signal`, say so first: no feature beat a
+  shuffled target, so the charts are descriptive and there is nothing to model on yet.
+  Do not present the top-ranked chart as a finding.
 
 Example second `select_charts` call:
 
@@ -109,6 +112,10 @@ your job. For every column with a strong target relationship or high gain, ask:
   feature does not use future aggregates.
 - **Collection artifact:** Missingness, rounding or category coding that differs by
   outcome (e.g. a field only filled for churned users).
+
+Start with the report's `leakage_alerts`: VizJudge selects those charts first and
+defers them statistically (also when only the column's *missingness* predicts the
+target). Review each one, and cite its `leakage_suspect` evidence ID.
 
 A "too good" signal (near-perfect gain, every fold positive with tiny `gain_std`) is a
 leakage flag first and a feature second. Defer it with a rationale until the user

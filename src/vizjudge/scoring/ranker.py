@@ -35,15 +35,48 @@ def rank_candidates(
     *,
     diversity: bool = True,
 ) -> list[ChartCandidate]:
-    """Greedily select charts using explicit repetition and redundancy penalties."""
+    """Greedily select charts using explicit repetition and redundancy penalties.
+
+    Leakage suspects are selected first, whatever their score: the host must see them
+    to decide whether the column exists at prediction time.
+    """
     validate_top_k(top_k)
     unique = {
         (candidate.kind, candidate.x, candidate.y, candidate.target): candidate
         for candidate in reversed(candidates)
     }
-    judged = [judge_candidate(frame, candidate) for candidate in unique.values()]
+    supervised = any(candidate.target for candidate in unique.values())
+    judged = [
+        judge_candidate(frame, candidate, supervised=supervised) for candidate in unique.values()
+    ]
     selected: list[ChartCandidate] = []
     similarity: dict[tuple[str, str], str | None] = {}
+
+    def redundancy(item: ChartCandidate, previous: ChartCandidate) -> str | None:
+        if not item.feature or not previous.feature or item.feature == previous.feature:
+            return None
+        pair = tuple(sorted((item.feature, previous.feature)))
+        if pair not in similarity:
+            similarity[pair] = _redundancy(frame[pair[0]], frame[pair[1]])
+        return similarity[pair]
+
+    suspects = sorted(
+        (item for item in judged if item.metrics.get("leakage_suspect")),
+        key=lambda item: (-item.score, item.key),
+    )
+    for item in suspects:
+        if len(selected) >= top_k:
+            break
+        # One chart per leaking signal; redundant copies compete in the ranking below.
+        if any(
+            item.feature == previous.feature or redundancy(item, previous) for previous in selected
+        ):
+            continue
+        item.selection_penalty = 0.0
+        item.selection_score = item.score
+        item.selection_reasons = ["Surfaced ahead of the ranking for leakage review."]
+        selected.append(item)
+        judged.remove(item)
     while judged and len(selected) < top_k:
         for item in judged:
             penalty = 0.0
@@ -55,16 +88,10 @@ def rank_candidates(
                     if columns & other:
                         penalty = max(penalty, 12.0)
                         reasons.append("A selected chart already covers this feature.")
-                    if item.feature and previous.feature and item.feature != previous.feature:
-                        pair = tuple(sorted((item.feature, previous.feature)))
-                        if pair not in similarity:
-                            similarity[pair] = _redundancy(frame[pair[0]], frame[pair[1]])
-                        if similarity[pair]:
-                            penalty = max(penalty, 20.0)
-                            reasons.append(
-                                f"Feature is redundant with {previous.feature} "
-                                f"({similarity[pair]})."
-                            )
+                    reason = redundancy(item, previous)
+                    if reason:
+                        penalty = max(penalty, 20.0)
+                        reasons.append(f"Feature is redundant with {previous.feature} ({reason}).")
                 if any(previous.kind == item.kind for previous in selected):
                     penalty += 5.0
                     reasons.append("This chart family is already represented.")

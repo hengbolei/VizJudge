@@ -1,8 +1,8 @@
 {
-  "schema_version": "0.4",
-  "vizjudge_version": "0.4.0",
-  "generated_at": "2026-10-17T07:46:20.583986+00:00",
-  "source": "examples/breast_cancer/breast_cancer.csv",
+  "schema_version": "0.5",
+  "vizjudge_version": "0.5.0",
+  "generated_at": "2026-10-22T04:31:22.218895+00:00",
+  "source": "D:\\GitData\\VizJudge\\examples\\breast_cancer\\breast_cancer.csv",
   "target": "diagnosis",
   "task": "classification",
   "role_overrides": {},
@@ -561,7 +561,7 @@
   "predictive_validation": {
     "status": "completed",
     "reason": null,
-    "method": "ridge_baseline",
+    "method": "binned_ridge_baseline",
     "split": "shuffled_stratified",
     "cv_folds": 5,
     "seed": 42,
@@ -571,347 +571,561 @@
     "row_count": 569,
     "excluded_target_rows": 0,
     "sampled": false,
-    "metric": "balanced_accuracy",
+    "metric": "roc_auc",
     "features": {
       "worst_concave_points": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.901073,
-        "incremental_gain": 0.401073,
-        "gain_std": 0.021661,
+        "feature_score": 0.964309,
+        "incremental_gain": 0.464309,
+        "gain_std": 0.016757,
         "positive_folds": 5,
         "fold_gains": [
-          0.437339,
-          0.404716,
-          0.39118,
-          0.386318,
-          0.385815
+          0.470446,
+          0.473837,
+          0.472334,
+          0.47049,
+          0.43444
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": 0.010436,
+        "conditional_score": 0.983415,
+        "conditioned_on": [
+          "worst_perimeter"
+        ]
       },
       "worst_perimeter": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.874501,
-        "incremental_gain": 0.374501,
-        "gain_std": 0.030702,
+        "feature_score": 0.972979,
+        "incremental_gain": 0.472979,
+        "gain_std": 0.017406,
         "positive_folds": 5,
         "fold_gains": [
-          0.406977,
-          0.353521,
-          0.380952,
-          0.39772,
-          0.333333
+          0.443798,
+          0.471899,
+          0.488934,
+          0.479041,
+          0.481221
         ],
-        "in_baseline": false
-      },
-      "mean_concave_points": {
-        "status": "completed",
-        "metric": "balanced_accuracy",
-        "baseline_score": 0.5,
-        "feature_score": 0.865497,
-        "incremental_gain": 0.365497,
-        "gain_std": 0.070942,
-        "positive_folds": 5,
-        "fold_gains": [
-          0.386143,
-          0.29312,
-          0.419349,
-          0.440476,
-          0.288397
-        ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": 0.472979,
+        "conditional_score": 0.972979,
+        "conditioned_on": []
       },
       "worst_radius": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.856536,
-        "incremental_gain": 0.356536,
-        "gain_std": 0.037775,
+        "feature_score": 0.971231,
+        "incremental_gain": 0.471231,
+        "gain_std": 0.011414,
         "positive_folds": 5,
         "fold_gains": [
-          0.406977,
-          0.330265,
-          0.369048,
-          0.366868,
-          0.309524
+          0.457041,
+          0.467862,
+          0.488598,
+          0.469484,
+          0.473172
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": -0.00086,
+        "conditional_score": 0.993131,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
       },
-      "mean_perimeter": {
+      "mean_concave_points": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.84968,
-        "incremental_gain": 0.34968,
-        "gain_std": 0.044544,
+        "feature_score": 0.963273,
+        "incremental_gain": 0.463273,
+        "gain_std": 0.024324,
         "positive_folds": 5,
         "fold_gains": [
-          0.388404,
-          0.307009,
-          0.390677,
-          0.364688,
-          0.297619
+          0.47093,
+          0.464147,
+          0.469484,
+          0.488766,
+          0.423038
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": -0.002723,
+        "conditional_score": 0.991268,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
       },
       "worst_area": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.828622,
-        "incremental_gain": 0.328622,
-        "gain_std": 0.048546,
+        "feature_score": 0.966485,
+        "incremental_gain": 0.466485,
+        "gain_std": 0.016623,
         "positive_folds": 5,
         "fold_gains": [
-          0.395349,
-          0.295381,
-          0.321429,
-          0.357143,
-          0.27381
+          0.462209,
+          0.443152,
+          0.488095,
+          0.464118,
+          0.474849
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": -0.000584,
+        "conditional_score": 0.993407,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
+      },
+      "mean_perimeter": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.94015,
+        "incremental_gain": 0.44015,
+        "gain_std": 0.033275,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.430556,
+          0.388404,
+          0.458249,
+          0.447686,
+          0.475855
+        ],
+        "in_baseline": false,
+        "conditional_gain": -0.002494,
+        "conditional_score": 0.991496,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
       },
       "mean_radius": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.840211,
-        "incremental_gain": 0.340211,
-        "gain_std": 0.041995,
+        "feature_score": 0.936173,
+        "incremental_gain": 0.436173,
+        "gain_std": 0.026328,
         "positive_folds": 5,
         "fold_gains": [
-          0.376776,
-          0.307009,
-          0.378773,
-          0.352783,
-          0.285714
+          0.420381,
+          0.401163,
+          0.454225,
+          0.437793,
+          0.467304
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": -0.000733,
+        "conditional_score": 0.993258,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
       },
       "mean_area": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.81704,
-        "incremental_gain": 0.31704,
-        "gain_std": 0.036817,
+        "feature_score": 0.935055,
+        "incremental_gain": 0.435055,
+        "gain_std": 0.026051,
         "positive_folds": 5,
         "fold_gains": [
-          0.360465,
-          0.283753,
-          0.331154,
-          0.336016,
-          0.27381
+          0.423127,
+          0.404393,
+          0.457076,
+          0.423709,
+          0.466968
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": -0.000609,
+        "conditional_score": 0.993382,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
       },
       "mean_concavity": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.821359,
-        "incremental_gain": 0.321359,
-        "gain_std": 0.036305,
+        "feature_score": 0.930886,
+        "incremental_gain": 0.430886,
+        "gain_std": 0.025988,
         "positive_folds": 5,
         "fold_gains": [
-          0.334948,
-          0.32332,
-          0.333836,
-          0.354963,
-          0.259725
+          0.450581,
+          0.430879,
+          0.425553,
+          0.45674,
+          0.390677
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": -0.00045,
+        "conditional_score": 0.993541,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
       },
       "worst_concavity": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.807427,
-        "incremental_gain": 0.307427,
-        "gain_std": 0.024903,
+        "feature_score": 0.917802,
+        "incremental_gain": 0.417802,
+        "gain_std": 0.018148,
         "positive_folds": 5,
         "fold_gains": [
-          0.302487,
-          0.309432,
-          0.348424,
-          0.29326,
-          0.283535
+          0.430879,
+          0.425065,
+          0.386653,
+          0.428907,
+          0.417505
         ],
-        "in_baseline": false
-      },
-      "mean_compactness": {
-        "status": "completed",
-        "metric": "balanced_accuracy",
-        "baseline_score": 0.5,
-        "feature_score": 0.741245,
-        "incremental_gain": 0.241245,
-        "gain_std": 0.032534,
-        "positive_folds": 5,
-        "fold_gains": [
-          0.255975,
-          0.279393,
-          0.193662,
-          0.250503,
-          0.226693
-        ],
-        "in_baseline": false
-      },
-      "worst_compactness": {
-        "status": "completed",
-        "metric": "balanced_accuracy",
-        "baseline_score": 0.5,
-        "feature_score": 0.746817,
-        "incremental_gain": 0.246817,
-        "gain_std": 0.042598,
-        "positive_folds": 5,
-        "fold_gains": [
-          0.258236,
-          0.307171,
-          0.236419,
-          0.243461,
-          0.188799
-        ],
-        "in_baseline": false
-      },
-      "radius_error": {
-        "status": "completed",
-        "metric": "balanced_accuracy",
-        "baseline_score": 0.5,
-        "feature_score": 0.741562,
-        "incremental_gain": 0.241562,
-        "gain_std": 0.067178,
-        "positive_folds": 5,
-        "fold_gains": [
-          0.307009,
-          0.200097,
-          0.266767,
-          0.288397,
-          0.14554
-        ],
-        "in_baseline": false
-      },
-      "perimeter_error": {
-        "status": "completed",
-        "metric": "balanced_accuracy",
-        "baseline_score": 0.5,
-        "feature_score": 0.71651,
-        "incremental_gain": 0.21651,
-        "gain_std": 0.049015,
-        "positive_folds": 5,
-        "fold_gains": [
-          0.253553,
-          0.218669,
-          0.224011,
-          0.252683,
-          0.133635
-        ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": 0.000258,
+        "conditional_score": 0.993603,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness"
+        ]
       },
       "area_error": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.732055,
-        "incremental_gain": 0.232055,
-        "gain_std": 0.047474,
+        "feature_score": 0.91333,
+        "incremental_gain": 0.41333,
+        "gain_std": 0.029892,
         "positive_folds": 5,
         "fold_gains": [
-          0.24887,
-          0.22093,
-          0.261905,
-          0.27381,
-          0.154762
+          0.448643,
+          0.404393,
+          0.441147,
+          0.387827,
+          0.384641
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": 0.003448,
+        "conditional_score": 0.991444,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture"
+        ]
+      },
+      "radius_error": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.87325,
+        "incremental_gain": 0.37325,
+        "gain_std": 0.048614,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.426034,
+          0.384044,
+          0.372904,
+          0.389336,
+          0.29393
+        ],
+        "in_baseline": false,
+        "conditional_gain": -0.000127,
+        "conditional_score": 0.993864,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
+      },
+      "mean_compactness": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.856079,
+        "incremental_gain": 0.356079,
+        "gain_std": 0.039137,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.395672,
+          0.361919,
+          0.343058,
+          0.383635,
+          0.29611
+        ],
+        "in_baseline": false,
+        "conditional_gain": 0.000862,
+        "conditional_score": 0.993345,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness"
+        ]
+      },
+      "worst_compactness": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.863074,
+        "incremental_gain": 0.363074,
+        "gain_std": 0.023586,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.36854,
+          0.386466,
+          0.365359,
+          0.371563,
+          0.323441
+        ],
+        "in_baseline": false,
+        "conditional_gain": -0.000837,
+        "conditional_score": 0.993153,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
+      },
+      "perimeter_error": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.870422,
+        "incremental_gain": 0.370422,
+        "gain_std": 0.044814,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.42345,
+          0.366118,
+          0.372569,
+          0.389168,
+          0.300805
+        ],
+        "in_baseline": false,
+        "conditional_gain": 0.000328,
+        "conditional_score": 0.993991,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture"
+        ]
       },
       "worst_texture": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.671714,
-        "incremental_gain": 0.171714,
-        "gain_std": 0.024333,
+        "feature_score": 0.78275,
+        "incremental_gain": 0.28275,
+        "gain_std": 0.031304,
         "positive_folds": 5,
         "fold_gains": [
-          0.146964,
-          0.149063,
-          0.176895,
-          0.18008,
-          0.205567
+          0.231912,
+          0.278585,
+          0.308015,
+          0.28672,
+          0.308518
         ],
-        "in_baseline": false
-      },
-      "worst_smoothness": {
-        "status": "completed",
-        "metric": "balanced_accuracy",
-        "baseline_score": 0.5,
-        "feature_score": 0.657587,
-        "incremental_gain": 0.157587,
-        "gain_std": 0.048813,
-        "positive_folds": 5,
-        "fold_gains": [
-          0.200097,
-          0.15843,
-          0.208249,
-          0.129779,
-          0.091382
-        ],
-        "in_baseline": false
-      },
-      "mean_texture": {
-        "status": "completed",
-        "metric": "balanced_accuracy",
-        "baseline_score": 0.5,
-        "feature_score": 0.638684,
-        "incremental_gain": 0.138684,
-        "gain_std": 0.043916,
-        "positive_folds": 5,
-        "fold_gains": [
-          0.114341,
-          0.102552,
-          0.122233,
-          0.213112,
-          0.14118
-        ],
-        "in_baseline": false
-      },
-      "worst_symmetry": {
-        "status": "completed",
-        "metric": "balanced_accuracy",
-        "baseline_score": 0.5,
-        "feature_score": 0.631655,
-        "incremental_gain": 0.131655,
-        "gain_std": 0.043276,
-        "positive_folds": 5,
-        "fold_gains": [
-          0.155846,
-          0.190891,
-          0.078974,
-          0.107646,
-          0.124916
-        ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": 0.004581,
+        "conditional_score": 0.987996,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points"
+        ]
       },
       "concave_points_error": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.629833,
-        "incremental_gain": 0.129833,
-        "gain_std": 0.033486,
+        "feature_score": 0.789111,
+        "incremental_gain": 0.289111,
+        "gain_std": 0.052677,
         "positive_folds": 5,
         "fold_gains": [
-          0.139696,
-          0.111919,
-          0.134641,
-          0.176392,
-          0.086519
+          0.345284,
+          0.25436,
+          0.245305,
+          0.348089,
+          0.252515
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": -0.000783,
+        "conditional_score": 0.993208,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
+      },
+      "mean_texture": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.778757,
+        "incremental_gain": 0.278757,
+        "gain_std": 0.035893,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.22416,
+          0.260336,
+          0.299799,
+          0.300302,
+          0.309188
+        ],
+        "in_baseline": false,
+        "conditional_gain": 6e-05,
+        "conditional_score": 0.993663,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity"
+        ]
+      },
+      "worst_smoothness": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.746259,
+        "incremental_gain": 0.246259,
+        "gain_std": 0.039155,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.284238,
+          0.262112,
+          0.274983,
+          0.194836,
+          0.215124
+        ],
+        "in_baseline": false,
+        "conditional_gain": 0.001039,
+        "conditional_score": 0.992483,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error"
+        ]
+      },
+      "worst_symmetry": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.710727,
+        "incremental_gain": 0.210727,
+        "gain_std": 0.065104,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.281977,
+          0.266796,
+          0.197854,
+          0.12173,
+          0.185278
+        ],
+        "in_baseline": false,
+        "conditional_gain": -0.000532,
+        "conditional_score": 0.993459,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
       }
     },
     "warnings": [
@@ -919,173 +1133,131 @@
       "Fold variation is descriptive, not a confidence interval or significance test.",
       "Only the first 20 ranked features were validated."
     ],
-    "baseline_score": 0.5
+    "baseline_score": 0.5,
+    "forward_selection": {
+      "status": "completed",
+      "max_steps": 10,
+      "steps": [
+        {
+          "feature": "worst_perimeter",
+          "conditional_gain": 0.472979,
+          "score": 0.972979
+        },
+        {
+          "feature": "worst_concave_points",
+          "conditional_gain": 0.010436,
+          "score": 0.983415
+        },
+        {
+          "feature": "worst_texture",
+          "conditional_gain": 0.004581,
+          "score": 0.987996
+        },
+        {
+          "feature": "area_error",
+          "conditional_gain": 0.003448,
+          "score": 0.991444
+        },
+        {
+          "feature": "worst_smoothness",
+          "conditional_gain": 0.001039,
+          "score": 0.992483
+        },
+        {
+          "feature": "mean_compactness",
+          "conditional_gain": 0.000862,
+          "score": 0.993345
+        },
+        {
+          "feature": "worst_concavity",
+          "conditional_gain": 0.000258,
+          "score": 0.993603
+        },
+        {
+          "feature": "mean_texture",
+          "conditional_gain": 6e-05,
+          "score": 0.993663
+        },
+        {
+          "feature": "perimeter_error",
+          "conditional_gain": 0.000328,
+          "score": 0.993991
+        }
+      ],
+      "note": "Each step adds the feature with the largest mean held-out gain over the baseline plus earlier steps; features never added report their gain over the last conditioning set."
+    },
+    "null_test": {
+      "status": "completed",
+      "statistic": "max_mean_incremental_gain",
+      "observed": 0.472979,
+      "permutations": 49,
+      "p_value": 0.02,
+      "alpha": 0.05,
+      "signal_detected": true
+    }
   },
+  "signal_assessment": {
+    "status": "signal",
+    "p_value": 0.02,
+    "message": "The best validated feature beats the permutation null (p = 0.020)."
+  },
+  "leakage_alerts": [],
   "warnings": [],
   "ranked_charts": [
-    {
-      "kind": "target_box",
-      "title": "worst_concave_points by target diagnosis",
-      "x": "diagnosis",
-      "y": "worst_concave_points",
-      "target": "diagnosis",
-      "score": 91.7,
-      "reasons": [
-        "100% complete-case coverage across plotted columns",
-        "strong group separation by eta squared (0.63)",
-        "Held-out balanced_accuracy gain over baseline: 0.4011 (positive is better)."
-      ],
-      "observations": [
-        "worst_concave_points has strong separation across diagnosis groups (0.63)."
-      ],
-      "image": "01-target_box__diagnosis__worst_concave_points__diagnosis.png",
-      "feature": "worst_concave_points",
-      "metrics": {
-        "coverage": 1.0,
-        "sample_count": 569,
-        "eta_squared": 0.629747,
-        "heuristic_score": 79.6,
-        "predictive_adjustment": 12.032
-      },
-      "warnings": [],
-      "predictive": {
-        "status": "completed",
-        "metric": "balanced_accuracy",
-        "baseline_score": 0.5,
-        "feature_score": 0.901073,
-        "incremental_gain": 0.401073,
-        "gain_std": 0.021661,
-        "positive_folds": 5,
-        "fold_gains": [
-          0.437339,
-          0.404716,
-          0.39118,
-          0.386318,
-          0.385815
-        ],
-        "in_baseline": false
-      },
-      "selection_score": 91.7,
-      "selection_penalty": 0.0,
-      "selection_reasons": [],
-      "judgment": {
-        "chart_id": "[\"target_box\",\"diagnosis\",\"worst_concave_points\",\"diagnosis\"]",
-        "verdict": "keep",
-        "evidence_ids": [
-          "Ca2f09ef6bead.coverage",
-          "Ca2f09ef6bead.sample_count",
-          "Ca2f09ef6bead.eta_squared",
-          "Ca2f09ef6bead.heuristic_score",
-          "Ca2f09ef6bead.predictive_adjustment",
-          "Ca2f09ef6bead.incremental_gain",
-          "Ca2f09ef6bead.gain_std",
-          "Ca2f09ef6bead.positive_folds"
-        ],
-        "confidence": {
-          "level": "high",
-          "basis": "Positive incremental ridge-baseline gain in every held-out fold.",
-          "scope": "Confidence in prioritizing this chart, not a statistical probability."
-        },
-        "next_step": "Confirm with a domain-appropriate split before feature selection.",
-        "statistical_priority": 91.7,
-        "llm_priority": null,
-        "llm_rationale": null
-      }
-    },
-    {
-      "kind": "histogram",
-      "title": "Distribution of area_error",
-      "x": "area_error",
-      "y": null,
-      "target": null,
-      "score": 85.0,
-      "reasons": [
-        "100% complete-case coverage across plotted columns",
-        "absolute skew is 5.45"
-      ],
-      "observations": [
-        "area_error is strongly skewed; inspect transformations and robust scaling."
-      ],
-      "image": "02-histogram__area_error.png",
-      "feature": null,
-      "metrics": {
-        "coverage": 1.0,
-        "sample_count": 569,
-        "skew": 5.447186,
-        "heuristic_score": 85.0
-      },
-      "warnings": [],
-      "predictive": null,
-      "selection_score": 85.0,
-      "selection_penalty": 0.0,
-      "selection_reasons": [],
-      "judgment": {
-        "chart_id": "[\"histogram\",\"area_error\",null,null]",
-        "verdict": "keep",
-        "evidence_ids": [
-          "C0b47a51c9d8c.coverage",
-          "C0b47a51c9d8c.sample_count",
-          "C0b47a51c9d8c.skew",
-          "C0b47a51c9d8c.heuristic_score"
-        ],
-        "confidence": {
-          "level": "moderate",
-          "basis": "At least 30 complete observations; association remains heuristic.",
-          "scope": "Confidence in prioritizing this chart, not a statistical probability."
-        },
-        "next_step": "Confirm with a domain-appropriate split before feature selection.",
-        "statistical_priority": 85.0,
-        "llm_priority": null,
-        "llm_rationale": null
-      }
-    },
     {
       "kind": "target_box",
       "title": "worst_perimeter by target diagnosis",
       "x": "diagnosis",
       "y": "worst_perimeter",
       "target": "diagnosis",
-      "score": 89.9,
+      "score": 92.4,
       "reasons": [
         "100% complete-case coverage across plotted columns",
-        "strong group separation by eta squared (0.61)",
-        "Held-out balanced_accuracy gain over baseline: 0.3745 (positive is better)."
+        "strong group separation by eta (0.78; eta squared 0.61)",
+        "strong nonlinear dependence by information coefficient (0.77); blended relevance 0.78",
+        "Held-out roc_auc gain over baseline: 0.4730 (positive is better); held-out strength 0.95 vs in-sample relevance 0.78."
       ],
       "observations": [
-        "worst_perimeter has strong separation across diagnosis groups (0.61)."
+        "worst_perimeter has strong separation across diagnosis groups (0.78)."
       ],
-      "image": "03-target_box__diagnosis__worst_perimeter__diagnosis.png",
+      "image": "01-target_box__diagnosis__worst_perimeter__diagnosis.png",
       "feature": "worst_perimeter",
       "metrics": {
         "coverage": 1.0,
         "sample_count": 569,
         "eta_squared": 0.612955,
-        "heuristic_score": 78.7,
-        "predictive_adjustment": 11.235
+        "eta": 0.782914,
+        "information_coefficient": 0.770373,
+        "relevance": 0.776643,
+        "heuristic_score": 87.7,
+        "held_out_strength": 0.945958,
+        "predictive_adjustment": 4.656,
+        "conditional_gain": 0.472979
       },
       "warnings": [],
       "predictive": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.874501,
-        "incremental_gain": 0.374501,
-        "gain_std": 0.030702,
+        "feature_score": 0.972979,
+        "incremental_gain": 0.472979,
+        "gain_std": 0.017406,
         "positive_folds": 5,
         "fold_gains": [
-          0.406977,
-          0.353521,
-          0.380952,
-          0.39772,
-          0.333333
+          0.443798,
+          0.471899,
+          0.488934,
+          0.479041,
+          0.481221
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": 0.472979,
+        "conditional_score": 0.972979,
+        "conditioned_on": []
       },
-      "selection_score": 84.9,
-      "selection_penalty": 5.0,
-      "selection_reasons": [
-        "This chart family is already represented."
-      ],
+      "selection_score": 92.4,
+      "selection_penalty": 0.0,
+      "selection_reasons": [],
       "judgment": {
         "chart_id": "[\"target_box\",\"diagnosis\",\"worst_perimeter\",\"diagnosis\"]",
         "verdict": "keep",
@@ -1093,8 +1265,13 @@
           "C6131c4c4b5ae.coverage",
           "C6131c4c4b5ae.sample_count",
           "C6131c4c4b5ae.eta_squared",
+          "C6131c4c4b5ae.eta",
+          "C6131c4c4b5ae.information_coefficient",
+          "C6131c4c4b5ae.relevance",
           "C6131c4c4b5ae.heuristic_score",
+          "C6131c4c4b5ae.held_out_strength",
           "C6131c4c4b5ae.predictive_adjustment",
+          "C6131c4c4b5ae.conditional_gain",
           "C6131c4c4b5ae.incremental_gain",
           "C6131c4c4b5ae.gain_std",
           "C6131c4c4b5ae.positive_folds"
@@ -1105,7 +1282,94 @@
           "scope": "Confidence in prioritizing this chart, not a statistical probability."
         },
         "next_step": "Confirm with a domain-appropriate split before feature selection.",
-        "statistical_priority": 84.9,
+        "statistical_priority": 92.4,
+        "llm_priority": null,
+        "llm_rationale": null
+      }
+    },
+    {
+      "kind": "target_box",
+      "title": "worst_concave_points by target diagnosis",
+      "x": "diagnosis",
+      "y": "worst_concave_points",
+      "target": "diagnosis",
+      "score": 79.4,
+      "reasons": [
+        "100% complete-case coverage across plotted columns",
+        "strong group separation by eta (0.79; eta squared 0.63)",
+        "strong nonlinear dependence by information coefficient (0.76); blended relevance 0.78",
+        "Held-out roc_auc gain over baseline: 0.4643 (positive is better); held-out strength 0.47 vs in-sample relevance 0.78."
+      ],
+      "observations": [
+        "worst_concave_points has strong separation across diagnosis groups (0.79)."
+      ],
+      "image": "02-target_box__diagnosis__worst_concave_points__diagnosis.png",
+      "feature": "worst_concave_points",
+      "metrics": {
+        "coverage": 1.0,
+        "sample_count": 569,
+        "eta_squared": 0.629747,
+        "eta": 0.793566,
+        "information_coefficient": 0.759683,
+        "relevance": 0.776625,
+        "heuristic_score": 87.7,
+        "held_out_strength": 0.474745,
+        "predictive_adjustment": -8.302,
+        "conditional_gain": 0.010436
+      },
+      "warnings": [],
+      "predictive": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.964309,
+        "incremental_gain": 0.464309,
+        "gain_std": 0.016757,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.470446,
+          0.473837,
+          0.472334,
+          0.47049,
+          0.43444
+        ],
+        "in_baseline": false,
+        "conditional_gain": 0.010436,
+        "conditional_score": 0.983415,
+        "conditioned_on": [
+          "worst_perimeter"
+        ]
+      },
+      "selection_score": 74.4,
+      "selection_penalty": 5.0,
+      "selection_reasons": [
+        "This chart family is already represented."
+      ],
+      "judgment": {
+        "chart_id": "[\"target_box\",\"diagnosis\",\"worst_concave_points\",\"diagnosis\"]",
+        "verdict": "keep",
+        "evidence_ids": [
+          "Ca2f09ef6bead.coverage",
+          "Ca2f09ef6bead.sample_count",
+          "Ca2f09ef6bead.eta_squared",
+          "Ca2f09ef6bead.eta",
+          "Ca2f09ef6bead.information_coefficient",
+          "Ca2f09ef6bead.relevance",
+          "Ca2f09ef6bead.heuristic_score",
+          "Ca2f09ef6bead.held_out_strength",
+          "Ca2f09ef6bead.predictive_adjustment",
+          "Ca2f09ef6bead.conditional_gain",
+          "Ca2f09ef6bead.incremental_gain",
+          "Ca2f09ef6bead.gain_std",
+          "Ca2f09ef6bead.positive_folds"
+        ],
+        "confidence": {
+          "level": "high",
+          "basis": "Positive incremental ridge-baseline gain in every held-out fold.",
+          "scope": "Confidence in prioritizing this chart, not a statistical probability."
+        },
+        "next_step": "Confirm with a domain-appropriate split before feature selection.",
+        "statistical_priority": 74.4,
         "llm_priority": null,
         "llm_rationale": null
       }
@@ -1116,43 +1380,62 @@
       "x": "diagnosis",
       "y": "mean_concave_points",
       "target": "diagnosis",
-      "score": 89.1,
+      "score": 78.7,
       "reasons": [
         "100% complete-case coverage across plotted columns",
-        "strong group separation by eta squared (0.60)",
-        "Held-out balanced_accuracy gain over baseline: 0.3655 (positive is better)."
+        "strong group separation by eta (0.78; eta squared 0.60)",
+        "strong nonlinear dependence by information coefficient (0.76); blended relevance 0.77",
+        "Held-out roc_auc gain over baseline: 0.4633 (positive is better); held-out strength 0.46 vs in-sample relevance 0.77."
       ],
       "observations": [
-        "mean_concave_points has strong separation across diagnosis groups (0.60)."
+        "mean_concave_points has strong separation across diagnosis groups (0.78)."
       ],
-      "image": "04-target_box__diagnosis__mean_concave_points__diagnosis.png",
+      "image": "03-target_box__diagnosis__mean_concave_points__diagnosis.png",
       "feature": "mean_concave_points",
       "metrics": {
         "coverage": 1.0,
         "sample_count": 569,
         "eta_squared": 0.603129,
-        "heuristic_score": 78.2,
-        "predictive_adjustment": 10.965
+        "eta": 0.776614,
+        "information_coefficient": 0.755001,
+        "relevance": 0.765808,
+        "heuristic_score": 87.1,
+        "held_out_strength": 0.46055,
+        "predictive_adjustment": -8.395,
+        "conditional_gain": -0.002723
       },
       "warnings": [],
       "predictive": {
         "status": "completed",
-        "metric": "balanced_accuracy",
+        "metric": "roc_auc",
         "baseline_score": 0.5,
-        "feature_score": 0.865497,
-        "incremental_gain": 0.365497,
-        "gain_std": 0.070942,
+        "feature_score": 0.963273,
+        "incremental_gain": 0.463273,
+        "gain_std": 0.024324,
         "positive_folds": 5,
         "fold_gains": [
-          0.386143,
-          0.29312,
-          0.419349,
-          0.440476,
-          0.288397
+          0.47093,
+          0.464147,
+          0.469484,
+          0.488766,
+          0.423038
         ],
-        "in_baseline": false
+        "in_baseline": false,
+        "conditional_gain": -0.002723,
+        "conditional_score": 0.991268,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
       },
-      "selection_score": 84.1,
+      "selection_score": 73.7,
       "selection_penalty": 5.0,
       "selection_reasons": [
         "This chart family is already represented."
@@ -1164,8 +1447,13 @@
           "C10b49f8b51a7.coverage",
           "C10b49f8b51a7.sample_count",
           "C10b49f8b51a7.eta_squared",
+          "C10b49f8b51a7.eta",
+          "C10b49f8b51a7.information_coefficient",
+          "C10b49f8b51a7.relevance",
           "C10b49f8b51a7.heuristic_score",
+          "C10b49f8b51a7.held_out_strength",
           "C10b49f8b51a7.predictive_adjustment",
+          "C10b49f8b51a7.conditional_gain",
           "C10b49f8b51a7.incremental_gain",
           "C10b49f8b51a7.gain_std",
           "C10b49f8b51a7.positive_folds"
@@ -1176,105 +1464,284 @@
           "scope": "Confidence in prioritizing this chart, not a statistical probability."
         },
         "next_step": "Confirm with a domain-appropriate split before feature selection.",
-        "statistical_priority": 84.1,
+        "statistical_priority": 73.7,
         "llm_priority": null,
         "llm_rationale": null
       }
     },
     {
-      "kind": "histogram",
-      "title": "Distribution of concavity_error",
-      "x": "concavity_error",
-      "y": null,
-      "target": null,
-      "score": 85.0,
+      "kind": "target_box",
+      "title": "mean_concavity by target diagnosis",
+      "x": "diagnosis",
+      "y": "mean_concavity",
+      "target": "diagnosis",
+      "score": 76.2,
       "reasons": [
         "100% complete-case coverage across plotted columns",
-        "absolute skew is 5.11"
+        "strong group separation by eta (0.70; eta squared 0.48)",
+        "strong nonlinear dependence by information coefficient (0.71); blended relevance 0.70",
+        "Held-out roc_auc gain over baseline: 0.4309 (positive is better); held-out strength 0.43 vs in-sample relevance 0.70."
       ],
       "observations": [
-        "concavity_error is strongly skewed; inspect transformations and robust scaling."
+        "mean_concavity has strong separation across diagnosis groups (0.70)."
       ],
-      "image": "05-histogram__concavity_error.png",
-      "feature": null,
+      "image": "04-target_box__diagnosis__mean_concavity__diagnosis.png",
+      "feature": "mean_concavity",
       "metrics": {
         "coverage": 1.0,
         "sample_count": 569,
-        "skew": 5.110463,
-        "heuristic_score": 85.0
+        "eta_squared": 0.484917,
+        "eta": 0.69636,
+        "information_coefficient": 0.710034,
+        "relevance": 0.703197,
+        "heuristic_score": 83.7,
+        "held_out_strength": 0.430436,
+        "predictive_adjustment": -7.501,
+        "conditional_gain": -0.00045
       },
       "warnings": [],
-      "predictive": null,
-      "selection_score": 80.0,
+      "predictive": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.930886,
+        "incremental_gain": 0.430886,
+        "gain_std": 0.025988,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.450581,
+          0.430879,
+          0.425553,
+          0.45674,
+          0.390677
+        ],
+        "in_baseline": false,
+        "conditional_gain": -0.00045,
+        "conditional_score": 0.993541,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness",
+          "worst_concavity",
+          "mean_texture",
+          "perimeter_error"
+        ]
+      },
+      "selection_score": 71.2,
       "selection_penalty": 5.0,
       "selection_reasons": [
         "This chart family is already represented."
       ],
       "judgment": {
-        "chart_id": "[\"histogram\",\"concavity_error\",null,null]",
+        "chart_id": "[\"target_box\",\"diagnosis\",\"mean_concavity\",\"diagnosis\"]",
         "verdict": "keep",
         "evidence_ids": [
-          "C0dd59ec21fc5.coverage",
-          "C0dd59ec21fc5.sample_count",
-          "C0dd59ec21fc5.skew",
-          "C0dd59ec21fc5.heuristic_score"
+          "Cfb9b31a7d010.coverage",
+          "Cfb9b31a7d010.sample_count",
+          "Cfb9b31a7d010.eta_squared",
+          "Cfb9b31a7d010.eta",
+          "Cfb9b31a7d010.information_coefficient",
+          "Cfb9b31a7d010.relevance",
+          "Cfb9b31a7d010.heuristic_score",
+          "Cfb9b31a7d010.held_out_strength",
+          "Cfb9b31a7d010.predictive_adjustment",
+          "Cfb9b31a7d010.conditional_gain",
+          "Cfb9b31a7d010.incremental_gain",
+          "Cfb9b31a7d010.gain_std",
+          "Cfb9b31a7d010.positive_folds"
         ],
         "confidence": {
-          "level": "moderate",
-          "basis": "At least 30 complete observations; association remains heuristic.",
+          "level": "high",
+          "basis": "Positive incremental ridge-baseline gain in every held-out fold.",
           "scope": "Confidence in prioritizing this chart, not a statistical probability."
         },
         "next_step": "Confirm with a domain-appropriate split before feature selection.",
-        "statistical_priority": 80.0,
+        "statistical_priority": 71.2,
         "llm_priority": null,
         "llm_rationale": null
       }
     },
     {
-      "kind": "histogram",
-      "title": "Distribution of fractal_dimension_error",
-      "x": "fractal_dimension_error",
-      "y": null,
-      "target": null,
-      "score": 85.0,
+      "kind": "target_box",
+      "title": "worst_concavity by target diagnosis",
+      "x": "diagnosis",
+      "y": "worst_concavity",
+      "target": "diagnosis",
+      "score": 75.0,
       "reasons": [
         "100% complete-case coverage across plotted columns",
-        "absolute skew is 3.92"
+        "strong group separation by eta (0.66; eta squared 0.44)",
+        "strong nonlinear dependence by information coefficient (0.68); blended relevance 0.67",
+        "Held-out roc_auc gain over baseline: 0.4178 (positive is better); held-out strength 0.42 vs in-sample relevance 0.67."
       ],
       "observations": [
-        "fractal_dimension_error is strongly skewed; inspect transformations and robust scaling."
+        "worst_concavity has strong separation across diagnosis groups (0.66)."
       ],
-      "image": "06-histogram__fractal_dimension_error.png",
-      "feature": null,
+      "image": "05-target_box__diagnosis__worst_concavity__diagnosis.png",
+      "feature": "worst_concavity",
       "metrics": {
         "coverage": 1.0,
         "sample_count": 569,
-        "skew": 3.923969,
-        "heuristic_score": 85.0
+        "eta_squared": 0.435086,
+        "eta": 0.65961,
+        "information_coefficient": 0.683363,
+        "relevance": 0.671487,
+        "heuristic_score": 81.9,
+        "held_out_strength": 0.41806,
+        "predictive_adjustment": -6.969,
+        "conditional_gain": 0.000258
       },
       "warnings": [],
-      "predictive": null,
-      "selection_score": 80.0,
+      "predictive": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.917802,
+        "incremental_gain": 0.417802,
+        "gain_std": 0.018148,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.430879,
+          0.425065,
+          0.386653,
+          0.428907,
+          0.417505
+        ],
+        "in_baseline": false,
+        "conditional_gain": 0.000258,
+        "conditional_score": 0.993603,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture",
+          "area_error",
+          "worst_smoothness",
+          "mean_compactness"
+        ]
+      },
+      "selection_score": 70.0,
       "selection_penalty": 5.0,
       "selection_reasons": [
         "This chart family is already represented."
       ],
       "judgment": {
-        "chart_id": "[\"histogram\",\"fractal_dimension_error\",null,null]",
+        "chart_id": "[\"target_box\",\"diagnosis\",\"worst_concavity\",\"diagnosis\"]",
         "verdict": "keep",
         "evidence_ids": [
-          "C76fb266b02e4.coverage",
-          "C76fb266b02e4.sample_count",
-          "C76fb266b02e4.skew",
-          "C76fb266b02e4.heuristic_score"
+          "Cb556e1f1156b.coverage",
+          "Cb556e1f1156b.sample_count",
+          "Cb556e1f1156b.eta_squared",
+          "Cb556e1f1156b.eta",
+          "Cb556e1f1156b.information_coefficient",
+          "Cb556e1f1156b.relevance",
+          "Cb556e1f1156b.heuristic_score",
+          "Cb556e1f1156b.held_out_strength",
+          "Cb556e1f1156b.predictive_adjustment",
+          "Cb556e1f1156b.conditional_gain",
+          "Cb556e1f1156b.incremental_gain",
+          "Cb556e1f1156b.gain_std",
+          "Cb556e1f1156b.positive_folds"
         ],
         "confidence": {
-          "level": "moderate",
-          "basis": "At least 30 complete observations; association remains heuristic.",
+          "level": "high",
+          "basis": "Positive incremental ridge-baseline gain in every held-out fold.",
           "scope": "Confidence in prioritizing this chart, not a statistical probability."
         },
         "next_step": "Confirm with a domain-appropriate split before feature selection.",
-        "statistical_priority": 80.0,
+        "statistical_priority": 70.0,
+        "llm_priority": null,
+        "llm_rationale": null
+      }
+    },
+    {
+      "kind": "target_box",
+      "title": "area_error by target diagnosis",
+      "x": "diagnosis",
+      "y": "area_error",
+      "target": "diagnosis",
+      "score": 73.7,
+      "reasons": [
+        "100% complete-case coverage across plotted columns",
+        "moderate group separation by eta (0.55; eta squared 0.30)",
+        "strong nonlinear dependence by information coefficient (0.70); blended relevance 0.63",
+        "Held-out roc_auc gain over baseline: 0.4133 (positive is better); held-out strength 0.42 vs in-sample relevance 0.63."
+      ],
+      "observations": [
+        "area_error has moderate separation across diagnosis groups (0.55).",
+        "area_error carries more nonlinear than linear signal about diagnosis (0.70 vs 0.55); consider binning, splines or tree models."
+      ],
+      "image": "06-target_box__diagnosis__area_error__diagnosis.png",
+      "feature": "area_error",
+      "metrics": {
+        "coverage": 1.0,
+        "sample_count": 569,
+        "eta_squared": 0.300563,
+        "eta": 0.548236,
+        "information_coefficient": 0.702362,
+        "relevance": 0.625299,
+        "heuristic_score": 79.4,
+        "held_out_strength": 0.416778,
+        "predictive_adjustment": -5.734,
+        "conditional_gain": 0.003448
+      },
+      "warnings": [],
+      "predictive": {
+        "status": "completed",
+        "metric": "roc_auc",
+        "baseline_score": 0.5,
+        "feature_score": 0.91333,
+        "incremental_gain": 0.41333,
+        "gain_std": 0.029892,
+        "positive_folds": 5,
+        "fold_gains": [
+          0.448643,
+          0.404393,
+          0.441147,
+          0.387827,
+          0.384641
+        ],
+        "in_baseline": false,
+        "conditional_gain": 0.003448,
+        "conditional_score": 0.991444,
+        "conditioned_on": [
+          "worst_perimeter",
+          "worst_concave_points",
+          "worst_texture"
+        ]
+      },
+      "selection_score": 68.7,
+      "selection_penalty": 5.0,
+      "selection_reasons": [
+        "This chart family is already represented."
+      ],
+      "judgment": {
+        "chart_id": "[\"target_box\",\"diagnosis\",\"area_error\",\"diagnosis\"]",
+        "verdict": "keep",
+        "evidence_ids": [
+          "C01bc33cedab7.coverage",
+          "C01bc33cedab7.sample_count",
+          "C01bc33cedab7.eta_squared",
+          "C01bc33cedab7.eta",
+          "C01bc33cedab7.information_coefficient",
+          "C01bc33cedab7.relevance",
+          "C01bc33cedab7.heuristic_score",
+          "C01bc33cedab7.held_out_strength",
+          "C01bc33cedab7.predictive_adjustment",
+          "C01bc33cedab7.conditional_gain",
+          "C01bc33cedab7.incremental_gain",
+          "C01bc33cedab7.gain_std",
+          "C01bc33cedab7.positive_folds"
+        ],
+        "confidence": {
+          "level": "high",
+          "basis": "Positive incremental ridge-baseline gain in every held-out fold.",
+          "scope": "Confidence in prioritizing this chart, not a statistical probability."
+        },
+        "next_step": "Confirm with a domain-appropriate split before feature selection.",
+        "statistical_priority": 68.7,
         "llm_priority": null,
         "llm_rationale": null
       }
@@ -1282,16 +1749,12 @@
   ],
   "recommendations": {
     "data_quality": [],
-    "feature_engineering": [
-      "Compare raw and monotonic transforms of area_error; validate inside cross-validation.",
-      "Compare raw and monotonic transforms of concavity_error; validate inside cross-validation.",
-      "Compare raw and monotonic transforms of fractal_dimension_error; validate inside cross-validation."
-    ],
+    "feature_engineering": [],
     "modeling": [
       "Use a leakage-safe train/validation split before confirming any visual hypothesis.",
       "Start with a regularized linear classifier and a tree-based baseline; compare calibrated metrics.",
-      "Prioritize worst_concave_points, worst_perimeter, mean_concave_points for follow-up: adding them individually improved the ridge baseline on most held-out folds. Confirm with a domain-appropriate split and model.",
-      "Validate the incremental out-of-sample value of the strongest visual signals: worst_concave_points, worst_perimeter, mean_concave_points.",
+      "Prioritize worst_perimeter, worst_concave_points, mean_concave_points, mean_concavity, worst_concavity, area_error for follow-up: adding them individually improved the ridge baseline on most held-out folds. Confirm with a domain-appropriate split and model.",
+      "Validate the incremental out-of-sample value of the strongest visual signals: worst_perimeter, worst_concave_points, mean_concave_points, mean_concavity, worst_concavity, area_error.",
       "Review unusually strong target relationships for direct, temporal, or proxy leakage."
     ]
   },
@@ -1346,107 +1809,13 @@
             "target": "diagnosis",
             "charts": [
               {
-                "chart_id": "[\"target_box\",\"diagnosis\",\"worst_concave_points\",\"diagnosis\"]",
-                "kind": "target_box",
-                "feature": "worst_concave_points",
-                "title": "worst_concave_points by target diagnosis",
-                "score": 91.7,
-                "warnings": [],
-                "predictive_metric": "balanced_accuracy",
-                "evidence": [
-                  {
-                    "id": "Ca2f09ef6bead.coverage",
-                    "metric": "coverage",
-                    "value": 1.0,
-                    "source": "statistical_analysis"
-                  },
-                  {
-                    "id": "Ca2f09ef6bead.sample_count",
-                    "metric": "sample_count",
-                    "value": 569,
-                    "source": "statistical_analysis"
-                  },
-                  {
-                    "id": "Ca2f09ef6bead.eta_squared",
-                    "metric": "eta_squared",
-                    "value": 0.629747,
-                    "source": "statistical_analysis"
-                  },
-                  {
-                    "id": "Ca2f09ef6bead.heuristic_score",
-                    "metric": "heuristic_score",
-                    "value": 79.6,
-                    "source": "statistical_analysis"
-                  },
-                  {
-                    "id": "Ca2f09ef6bead.predictive_adjustment",
-                    "metric": "predictive_adjustment",
-                    "value": 12.032,
-                    "source": "statistical_analysis"
-                  },
-                  {
-                    "id": "Ca2f09ef6bead.incremental_gain",
-                    "metric": "incremental_gain",
-                    "value": 0.401073,
-                    "source": "held_out_validation"
-                  },
-                  {
-                    "id": "Ca2f09ef6bead.gain_std",
-                    "metric": "gain_std",
-                    "value": 0.021661,
-                    "source": "held_out_validation"
-                  },
-                  {
-                    "id": "Ca2f09ef6bead.positive_folds",
-                    "metric": "positive_folds",
-                    "value": 5,
-                    "source": "held_out_validation"
-                  }
-                ]
-              },
-              {
-                "chart_id": "[\"histogram\",\"area_error\",null,null]",
-                "kind": "histogram",
-                "feature": null,
-                "title": "Distribution of area_error",
-                "score": 85.0,
-                "warnings": [],
-                "predictive_metric": null,
-                "evidence": [
-                  {
-                    "id": "C0b47a51c9d8c.coverage",
-                    "metric": "coverage",
-                    "value": 1.0,
-                    "source": "statistical_analysis"
-                  },
-                  {
-                    "id": "C0b47a51c9d8c.sample_count",
-                    "metric": "sample_count",
-                    "value": 569,
-                    "source": "statistical_analysis"
-                  },
-                  {
-                    "id": "C0b47a51c9d8c.skew",
-                    "metric": "skew",
-                    "value": 5.447186,
-                    "source": "statistical_analysis"
-                  },
-                  {
-                    "id": "C0b47a51c9d8c.heuristic_score",
-                    "metric": "heuristic_score",
-                    "value": 85.0,
-                    "source": "statistical_analysis"
-                  }
-                ]
-              },
-              {
                 "chart_id": "[\"target_box\",\"diagnosis\",\"worst_perimeter\",\"diagnosis\"]",
                 "kind": "target_box",
                 "feature": "worst_perimeter",
                 "title": "worst_perimeter by target diagnosis",
-                "score": 89.9,
+                "score": 92.4,
                 "warnings": [],
-                "predictive_metric": "balanced_accuracy",
+                "predictive_metric": "roc_auc",
                 "evidence": [
                   {
                     "id": "C6131c4c4b5ae.coverage",
@@ -1467,27 +1836,57 @@
                     "source": "statistical_analysis"
                   },
                   {
+                    "id": "C6131c4c4b5ae.eta",
+                    "metric": "eta",
+                    "value": 0.782914,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C6131c4c4b5ae.information_coefficient",
+                    "metric": "information_coefficient",
+                    "value": 0.770373,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C6131c4c4b5ae.relevance",
+                    "metric": "relevance",
+                    "value": 0.776643,
+                    "source": "statistical_analysis"
+                  },
+                  {
                     "id": "C6131c4c4b5ae.heuristic_score",
                     "metric": "heuristic_score",
-                    "value": 78.7,
+                    "value": 87.7,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C6131c4c4b5ae.held_out_strength",
+                    "metric": "held_out_strength",
+                    "value": 0.945958,
                     "source": "statistical_analysis"
                   },
                   {
                     "id": "C6131c4c4b5ae.predictive_adjustment",
                     "metric": "predictive_adjustment",
-                    "value": 11.235,
+                    "value": 4.656,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C6131c4c4b5ae.conditional_gain",
+                    "metric": "conditional_gain",
+                    "value": 0.472979,
                     "source": "statistical_analysis"
                   },
                   {
                     "id": "C6131c4c4b5ae.incremental_gain",
                     "metric": "incremental_gain",
-                    "value": 0.374501,
+                    "value": 0.472979,
                     "source": "held_out_validation"
                   },
                   {
                     "id": "C6131c4c4b5ae.gain_std",
                     "metric": "gain_std",
-                    "value": 0.030702,
+                    "value": 0.017406,
                     "source": "held_out_validation"
                   },
                   {
@@ -1499,13 +1898,102 @@
                 ]
               },
               {
+                "chart_id": "[\"target_box\",\"diagnosis\",\"worst_concave_points\",\"diagnosis\"]",
+                "kind": "target_box",
+                "feature": "worst_concave_points",
+                "title": "worst_concave_points by target diagnosis",
+                "score": 79.4,
+                "warnings": [],
+                "predictive_metric": "roc_auc",
+                "evidence": [
+                  {
+                    "id": "Ca2f09ef6bead.coverage",
+                    "metric": "coverage",
+                    "value": 1.0,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.sample_count",
+                    "metric": "sample_count",
+                    "value": 569,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.eta_squared",
+                    "metric": "eta_squared",
+                    "value": 0.629747,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.eta",
+                    "metric": "eta",
+                    "value": 0.793566,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.information_coefficient",
+                    "metric": "information_coefficient",
+                    "value": 0.759683,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.relevance",
+                    "metric": "relevance",
+                    "value": 0.776625,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.heuristic_score",
+                    "metric": "heuristic_score",
+                    "value": 87.7,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.held_out_strength",
+                    "metric": "held_out_strength",
+                    "value": 0.474745,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.predictive_adjustment",
+                    "metric": "predictive_adjustment",
+                    "value": -8.302,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.conditional_gain",
+                    "metric": "conditional_gain",
+                    "value": 0.010436,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.incremental_gain",
+                    "metric": "incremental_gain",
+                    "value": 0.464309,
+                    "source": "held_out_validation"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.gain_std",
+                    "metric": "gain_std",
+                    "value": 0.016757,
+                    "source": "held_out_validation"
+                  },
+                  {
+                    "id": "Ca2f09ef6bead.positive_folds",
+                    "metric": "positive_folds",
+                    "value": 5,
+                    "source": "held_out_validation"
+                  }
+                ]
+              },
+              {
                 "chart_id": "[\"target_box\",\"diagnosis\",\"mean_concave_points\",\"diagnosis\"]",
                 "kind": "target_box",
                 "feature": "mean_concave_points",
                 "title": "mean_concave_points by target diagnosis",
-                "score": 89.1,
+                "score": 78.7,
                 "warnings": [],
-                "predictive_metric": "balanced_accuracy",
+                "predictive_metric": "roc_auc",
                 "evidence": [
                   {
                     "id": "C10b49f8b51a7.coverage",
@@ -1526,27 +2014,57 @@
                     "source": "statistical_analysis"
                   },
                   {
+                    "id": "C10b49f8b51a7.eta",
+                    "metric": "eta",
+                    "value": 0.776614,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C10b49f8b51a7.information_coefficient",
+                    "metric": "information_coefficient",
+                    "value": 0.755001,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C10b49f8b51a7.relevance",
+                    "metric": "relevance",
+                    "value": 0.765808,
+                    "source": "statistical_analysis"
+                  },
+                  {
                     "id": "C10b49f8b51a7.heuristic_score",
                     "metric": "heuristic_score",
-                    "value": 78.2,
+                    "value": 87.1,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C10b49f8b51a7.held_out_strength",
+                    "metric": "held_out_strength",
+                    "value": 0.46055,
                     "source": "statistical_analysis"
                   },
                   {
                     "id": "C10b49f8b51a7.predictive_adjustment",
                     "metric": "predictive_adjustment",
-                    "value": 10.965,
+                    "value": -8.395,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C10b49f8b51a7.conditional_gain",
+                    "metric": "conditional_gain",
+                    "value": -0.002723,
                     "source": "statistical_analysis"
                   },
                   {
                     "id": "C10b49f8b51a7.incremental_gain",
                     "metric": "incremental_gain",
-                    "value": 0.365497,
+                    "value": 0.463273,
                     "source": "held_out_validation"
                   },
                   {
                     "id": "C10b49f8b51a7.gain_std",
                     "metric": "gain_std",
-                    "value": 0.070942,
+                    "value": 0.024324,
                     "source": "held_out_validation"
                   },
                   {
@@ -1558,121 +2076,277 @@
                 ]
               },
               {
-                "chart_id": "[\"histogram\",\"concavity_error\",null,null]",
-                "kind": "histogram",
-                "feature": null,
-                "title": "Distribution of concavity_error",
-                "score": 85.0,
+                "chart_id": "[\"target_box\",\"diagnosis\",\"mean_concavity\",\"diagnosis\"]",
+                "kind": "target_box",
+                "feature": "mean_concavity",
+                "title": "mean_concavity by target diagnosis",
+                "score": 76.2,
                 "warnings": [],
-                "predictive_metric": null,
+                "predictive_metric": "roc_auc",
                 "evidence": [
                   {
-                    "id": "C0dd59ec21fc5.coverage",
+                    "id": "Cfb9b31a7d010.coverage",
                     "metric": "coverage",
                     "value": 1.0,
                     "source": "statistical_analysis"
                   },
                   {
-                    "id": "C0dd59ec21fc5.sample_count",
+                    "id": "Cfb9b31a7d010.sample_count",
                     "metric": "sample_count",
                     "value": 569,
                     "source": "statistical_analysis"
                   },
                   {
-                    "id": "C0dd59ec21fc5.skew",
-                    "metric": "skew",
-                    "value": 5.110463,
+                    "id": "Cfb9b31a7d010.eta_squared",
+                    "metric": "eta_squared",
+                    "value": 0.484917,
                     "source": "statistical_analysis"
                   },
                   {
-                    "id": "C0dd59ec21fc5.heuristic_score",
-                    "metric": "heuristic_score",
-                    "value": 85.0,
+                    "id": "Cfb9b31a7d010.eta",
+                    "metric": "eta",
+                    "value": 0.69636,
                     "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cfb9b31a7d010.information_coefficient",
+                    "metric": "information_coefficient",
+                    "value": 0.710034,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cfb9b31a7d010.relevance",
+                    "metric": "relevance",
+                    "value": 0.703197,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cfb9b31a7d010.heuristic_score",
+                    "metric": "heuristic_score",
+                    "value": 83.7,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cfb9b31a7d010.held_out_strength",
+                    "metric": "held_out_strength",
+                    "value": 0.430436,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cfb9b31a7d010.predictive_adjustment",
+                    "metric": "predictive_adjustment",
+                    "value": -7.501,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cfb9b31a7d010.conditional_gain",
+                    "metric": "conditional_gain",
+                    "value": -0.00045,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cfb9b31a7d010.incremental_gain",
+                    "metric": "incremental_gain",
+                    "value": 0.430886,
+                    "source": "held_out_validation"
+                  },
+                  {
+                    "id": "Cfb9b31a7d010.gain_std",
+                    "metric": "gain_std",
+                    "value": 0.025988,
+                    "source": "held_out_validation"
+                  },
+                  {
+                    "id": "Cfb9b31a7d010.positive_folds",
+                    "metric": "positive_folds",
+                    "value": 5,
+                    "source": "held_out_validation"
                   }
                 ]
               },
               {
-                "chart_id": "[\"histogram\",\"fractal_dimension_error\",null,null]",
-                "kind": "histogram",
-                "feature": null,
-                "title": "Distribution of fractal_dimension_error",
-                "score": 85.0,
+                "chart_id": "[\"target_box\",\"diagnosis\",\"worst_concavity\",\"diagnosis\"]",
+                "kind": "target_box",
+                "feature": "worst_concavity",
+                "title": "worst_concavity by target diagnosis",
+                "score": 75.0,
                 "warnings": [],
-                "predictive_metric": null,
+                "predictive_metric": "roc_auc",
                 "evidence": [
                   {
-                    "id": "C76fb266b02e4.coverage",
+                    "id": "Cb556e1f1156b.coverage",
                     "metric": "coverage",
                     "value": 1.0,
                     "source": "statistical_analysis"
                   },
                   {
-                    "id": "C76fb266b02e4.sample_count",
+                    "id": "Cb556e1f1156b.sample_count",
                     "metric": "sample_count",
                     "value": 569,
                     "source": "statistical_analysis"
                   },
                   {
-                    "id": "C76fb266b02e4.skew",
-                    "metric": "skew",
-                    "value": 3.923969,
+                    "id": "Cb556e1f1156b.eta_squared",
+                    "metric": "eta_squared",
+                    "value": 0.435086,
                     "source": "statistical_analysis"
                   },
                   {
-                    "id": "C76fb266b02e4.heuristic_score",
-                    "metric": "heuristic_score",
-                    "value": 85.0,
+                    "id": "Cb556e1f1156b.eta",
+                    "metric": "eta",
+                    "value": 0.65961,
                     "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cb556e1f1156b.information_coefficient",
+                    "metric": "information_coefficient",
+                    "value": 0.683363,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cb556e1f1156b.relevance",
+                    "metric": "relevance",
+                    "value": 0.671487,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cb556e1f1156b.heuristic_score",
+                    "metric": "heuristic_score",
+                    "value": 81.9,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cb556e1f1156b.held_out_strength",
+                    "metric": "held_out_strength",
+                    "value": 0.41806,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cb556e1f1156b.predictive_adjustment",
+                    "metric": "predictive_adjustment",
+                    "value": -6.969,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cb556e1f1156b.conditional_gain",
+                    "metric": "conditional_gain",
+                    "value": 0.000258,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "Cb556e1f1156b.incremental_gain",
+                    "metric": "incremental_gain",
+                    "value": 0.417802,
+                    "source": "held_out_validation"
+                  },
+                  {
+                    "id": "Cb556e1f1156b.gain_std",
+                    "metric": "gain_std",
+                    "value": 0.018148,
+                    "source": "held_out_validation"
+                  },
+                  {
+                    "id": "Cb556e1f1156b.positive_folds",
+                    "metric": "positive_folds",
+                    "value": 5,
+                    "source": "held_out_validation"
+                  }
+                ]
+              },
+              {
+                "chart_id": "[\"target_box\",\"diagnosis\",\"area_error\",\"diagnosis\"]",
+                "kind": "target_box",
+                "feature": "area_error",
+                "title": "area_error by target diagnosis",
+                "score": 73.7,
+                "warnings": [],
+                "predictive_metric": "roc_auc",
+                "evidence": [
+                  {
+                    "id": "C01bc33cedab7.coverage",
+                    "metric": "coverage",
+                    "value": 1.0,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C01bc33cedab7.sample_count",
+                    "metric": "sample_count",
+                    "value": 569,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C01bc33cedab7.eta_squared",
+                    "metric": "eta_squared",
+                    "value": 0.300563,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C01bc33cedab7.eta",
+                    "metric": "eta",
+                    "value": 0.548236,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C01bc33cedab7.information_coefficient",
+                    "metric": "information_coefficient",
+                    "value": 0.702362,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C01bc33cedab7.relevance",
+                    "metric": "relevance",
+                    "value": 0.625299,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C01bc33cedab7.heuristic_score",
+                    "metric": "heuristic_score",
+                    "value": 79.4,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C01bc33cedab7.held_out_strength",
+                    "metric": "held_out_strength",
+                    "value": 0.416778,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C01bc33cedab7.predictive_adjustment",
+                    "metric": "predictive_adjustment",
+                    "value": -5.734,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C01bc33cedab7.conditional_gain",
+                    "metric": "conditional_gain",
+                    "value": 0.003448,
+                    "source": "statistical_analysis"
+                  },
+                  {
+                    "id": "C01bc33cedab7.incremental_gain",
+                    "metric": "incremental_gain",
+                    "value": 0.41333,
+                    "source": "held_out_validation"
+                  },
+                  {
+                    "id": "C01bc33cedab7.gain_std",
+                    "metric": "gain_std",
+                    "value": 0.029892,
+                    "source": "held_out_validation"
+                  },
+                  {
+                    "id": "C01bc33cedab7.positive_folds",
+                    "metric": "positive_folds",
+                    "value": 5,
+                    "source": "held_out_validation"
                   }
                 ]
               }
             ],
-            "validation_status": "completed"
+            "validation_status": "completed",
+            "signal_status": "signal"
           },
           "reviews": [
-            {
-              "chart_id": "[\"target_box\",\"diagnosis\",\"worst_concave_points\",\"diagnosis\"]",
-              "verdict": "keep",
-              "evidence_ids": [
-                "Ca2f09ef6bead.coverage",
-                "Ca2f09ef6bead.sample_count",
-                "Ca2f09ef6bead.eta_squared",
-                "Ca2f09ef6bead.heuristic_score",
-                "Ca2f09ef6bead.predictive_adjustment",
-                "Ca2f09ef6bead.incremental_gain",
-                "Ca2f09ef6bead.gain_std",
-                "Ca2f09ef6bead.positive_folds"
-              ],
-              "confidence": {
-                "level": "high",
-                "basis": "Positive incremental ridge-baseline gain in every held-out fold.",
-                "scope": "Confidence in prioritizing this chart, not a statistical probability."
-              },
-              "next_step": "Confirm with a domain-appropriate split before feature selection.",
-              "statistical_priority": 91.7,
-              "llm_priority": null,
-              "llm_rationale": null
-            },
-            {
-              "chart_id": "[\"histogram\",\"area_error\",null,null]",
-              "verdict": "keep",
-              "evidence_ids": [
-                "C0b47a51c9d8c.coverage",
-                "C0b47a51c9d8c.sample_count",
-                "C0b47a51c9d8c.skew",
-                "C0b47a51c9d8c.heuristic_score"
-              ],
-              "confidence": {
-                "level": "moderate",
-                "basis": "At least 30 complete observations; association remains heuristic.",
-                "scope": "Confidence in prioritizing this chart, not a statistical probability."
-              },
-              "next_step": "Confirm with a domain-appropriate split before feature selection.",
-              "statistical_priority": 85.0,
-              "llm_priority": null,
-              "llm_rationale": null
-            },
             {
               "chart_id": "[\"target_box\",\"diagnosis\",\"worst_perimeter\",\"diagnosis\"]",
               "verdict": "keep",
@@ -1680,8 +2354,13 @@
                 "C6131c4c4b5ae.coverage",
                 "C6131c4c4b5ae.sample_count",
                 "C6131c4c4b5ae.eta_squared",
+                "C6131c4c4b5ae.eta",
+                "C6131c4c4b5ae.information_coefficient",
+                "C6131c4c4b5ae.relevance",
                 "C6131c4c4b5ae.heuristic_score",
+                "C6131c4c4b5ae.held_out_strength",
                 "C6131c4c4b5ae.predictive_adjustment",
+                "C6131c4c4b5ae.conditional_gain",
                 "C6131c4c4b5ae.incremental_gain",
                 "C6131c4c4b5ae.gain_std",
                 "C6131c4c4b5ae.positive_folds"
@@ -1692,7 +2371,35 @@
                 "scope": "Confidence in prioritizing this chart, not a statistical probability."
               },
               "next_step": "Confirm with a domain-appropriate split before feature selection.",
-              "statistical_priority": 84.9,
+              "statistical_priority": 92.4,
+              "llm_priority": null,
+              "llm_rationale": null
+            },
+            {
+              "chart_id": "[\"target_box\",\"diagnosis\",\"worst_concave_points\",\"diagnosis\"]",
+              "verdict": "keep",
+              "evidence_ids": [
+                "Ca2f09ef6bead.coverage",
+                "Ca2f09ef6bead.sample_count",
+                "Ca2f09ef6bead.eta_squared",
+                "Ca2f09ef6bead.eta",
+                "Ca2f09ef6bead.information_coefficient",
+                "Ca2f09ef6bead.relevance",
+                "Ca2f09ef6bead.heuristic_score",
+                "Ca2f09ef6bead.held_out_strength",
+                "Ca2f09ef6bead.predictive_adjustment",
+                "Ca2f09ef6bead.conditional_gain",
+                "Ca2f09ef6bead.incremental_gain",
+                "Ca2f09ef6bead.gain_std",
+                "Ca2f09ef6bead.positive_folds"
+              ],
+              "confidence": {
+                "level": "high",
+                "basis": "Positive incremental ridge-baseline gain in every held-out fold.",
+                "scope": "Confidence in prioritizing this chart, not a statistical probability."
+              },
+              "next_step": "Confirm with a domain-appropriate split before feature selection.",
+              "statistical_priority": 74.4,
               "llm_priority": null,
               "llm_rationale": null
             },
@@ -1703,8 +2410,13 @@
                 "C10b49f8b51a7.coverage",
                 "C10b49f8b51a7.sample_count",
                 "C10b49f8b51a7.eta_squared",
+                "C10b49f8b51a7.eta",
+                "C10b49f8b51a7.information_coefficient",
+                "C10b49f8b51a7.relevance",
                 "C10b49f8b51a7.heuristic_score",
+                "C10b49f8b51a7.held_out_strength",
                 "C10b49f8b51a7.predictive_adjustment",
+                "C10b49f8b51a7.conditional_gain",
                 "C10b49f8b51a7.incremental_gain",
                 "C10b49f8b51a7.gain_std",
                 "C10b49f8b51a7.positive_folds"
@@ -1715,45 +2427,91 @@
                 "scope": "Confidence in prioritizing this chart, not a statistical probability."
               },
               "next_step": "Confirm with a domain-appropriate split before feature selection.",
-              "statistical_priority": 84.1,
+              "statistical_priority": 73.7,
               "llm_priority": null,
               "llm_rationale": null
             },
             {
-              "chart_id": "[\"histogram\",\"concavity_error\",null,null]",
+              "chart_id": "[\"target_box\",\"diagnosis\",\"mean_concavity\",\"diagnosis\"]",
               "verdict": "keep",
               "evidence_ids": [
-                "C0dd59ec21fc5.coverage",
-                "C0dd59ec21fc5.sample_count",
-                "C0dd59ec21fc5.skew",
-                "C0dd59ec21fc5.heuristic_score"
+                "Cfb9b31a7d010.coverage",
+                "Cfb9b31a7d010.sample_count",
+                "Cfb9b31a7d010.eta_squared",
+                "Cfb9b31a7d010.eta",
+                "Cfb9b31a7d010.information_coefficient",
+                "Cfb9b31a7d010.relevance",
+                "Cfb9b31a7d010.heuristic_score",
+                "Cfb9b31a7d010.held_out_strength",
+                "Cfb9b31a7d010.predictive_adjustment",
+                "Cfb9b31a7d010.conditional_gain",
+                "Cfb9b31a7d010.incremental_gain",
+                "Cfb9b31a7d010.gain_std",
+                "Cfb9b31a7d010.positive_folds"
               ],
               "confidence": {
-                "level": "moderate",
-                "basis": "At least 30 complete observations; association remains heuristic.",
+                "level": "high",
+                "basis": "Positive incremental ridge-baseline gain in every held-out fold.",
                 "scope": "Confidence in prioritizing this chart, not a statistical probability."
               },
               "next_step": "Confirm with a domain-appropriate split before feature selection.",
-              "statistical_priority": 80.0,
+              "statistical_priority": 71.2,
               "llm_priority": null,
               "llm_rationale": null
             },
             {
-              "chart_id": "[\"histogram\",\"fractal_dimension_error\",null,null]",
+              "chart_id": "[\"target_box\",\"diagnosis\",\"worst_concavity\",\"diagnosis\"]",
               "verdict": "keep",
               "evidence_ids": [
-                "C76fb266b02e4.coverage",
-                "C76fb266b02e4.sample_count",
-                "C76fb266b02e4.skew",
-                "C76fb266b02e4.heuristic_score"
+                "Cb556e1f1156b.coverage",
+                "Cb556e1f1156b.sample_count",
+                "Cb556e1f1156b.eta_squared",
+                "Cb556e1f1156b.eta",
+                "Cb556e1f1156b.information_coefficient",
+                "Cb556e1f1156b.relevance",
+                "Cb556e1f1156b.heuristic_score",
+                "Cb556e1f1156b.held_out_strength",
+                "Cb556e1f1156b.predictive_adjustment",
+                "Cb556e1f1156b.conditional_gain",
+                "Cb556e1f1156b.incremental_gain",
+                "Cb556e1f1156b.gain_std",
+                "Cb556e1f1156b.positive_folds"
               ],
               "confidence": {
-                "level": "moderate",
-                "basis": "At least 30 complete observations; association remains heuristic.",
+                "level": "high",
+                "basis": "Positive incremental ridge-baseline gain in every held-out fold.",
                 "scope": "Confidence in prioritizing this chart, not a statistical probability."
               },
               "next_step": "Confirm with a domain-appropriate split before feature selection.",
-              "statistical_priority": 80.0,
+              "statistical_priority": 70.0,
+              "llm_priority": null,
+              "llm_rationale": null
+            },
+            {
+              "chart_id": "[\"target_box\",\"diagnosis\",\"area_error\",\"diagnosis\"]",
+              "verdict": "keep",
+              "evidence_ids": [
+                "C01bc33cedab7.coverage",
+                "C01bc33cedab7.sample_count",
+                "C01bc33cedab7.eta_squared",
+                "C01bc33cedab7.eta",
+                "C01bc33cedab7.information_coefficient",
+                "C01bc33cedab7.relevance",
+                "C01bc33cedab7.heuristic_score",
+                "C01bc33cedab7.held_out_strength",
+                "C01bc33cedab7.predictive_adjustment",
+                "C01bc33cedab7.conditional_gain",
+                "C01bc33cedab7.incremental_gain",
+                "C01bc33cedab7.gain_std",
+                "C01bc33cedab7.positive_folds"
+              ],
+              "confidence": {
+                "level": "high",
+                "basis": "Positive incremental ridge-baseline gain in every held-out fold.",
+                "scope": "Confidence in prioritizing this chart, not a statistical probability."
+              },
+              "next_step": "Confirm with a domain-appropriate split before feature selection.",
+              "statistical_priority": 68.7,
               "llm_priority": null,
               "llm_rationale": null
             }
@@ -1762,20 +2520,20 @@
         },
         "action": "none",
         "before": [
-          "[\"target_box\",\"diagnosis\",\"worst_concave_points\",\"diagnosis\"]",
-          "[\"histogram\",\"area_error\",null,null]",
           "[\"target_box\",\"diagnosis\",\"worst_perimeter\",\"diagnosis\"]",
+          "[\"target_box\",\"diagnosis\",\"worst_concave_points\",\"diagnosis\"]",
           "[\"target_box\",\"diagnosis\",\"mean_concave_points\",\"diagnosis\"]",
-          "[\"histogram\",\"concavity_error\",null,null]",
-          "[\"histogram\",\"fractal_dimension_error\",null,null]"
+          "[\"target_box\",\"diagnosis\",\"mean_concavity\",\"diagnosis\"]",
+          "[\"target_box\",\"diagnosis\",\"worst_concavity\",\"diagnosis\"]",
+          "[\"target_box\",\"diagnosis\",\"area_error\",\"diagnosis\"]"
         ],
         "after": [
-          "[\"target_box\",\"diagnosis\",\"worst_concave_points\",\"diagnosis\"]",
-          "[\"histogram\",\"area_error\",null,null]",
           "[\"target_box\",\"diagnosis\",\"worst_perimeter\",\"diagnosis\"]",
+          "[\"target_box\",\"diagnosis\",\"worst_concave_points\",\"diagnosis\"]",
           "[\"target_box\",\"diagnosis\",\"mean_concave_points\",\"diagnosis\"]",
-          "[\"histogram\",\"concavity_error\",null,null]",
-          "[\"histogram\",\"fractal_dimension_error\",null,null]"
+          "[\"target_box\",\"diagnosis\",\"mean_concavity\",\"diagnosis\"]",
+          "[\"target_box\",\"diagnosis\",\"worst_concavity\",\"diagnosis\"]",
+          "[\"target_box\",\"diagnosis\",\"area_error\",\"diagnosis\"]"
         ]
       }
     ],
@@ -1785,29 +2543,36 @@
         "id": "T1",
         "tool": "profile",
         "reason": "Inspect data quality and establish sampling scope.",
-        "started_at": "2026-10-17T07:46:18.418101+00:00",
-        "input_sha256": "ec35a38d8cfedd4ff941c94d22165a88423e181778bb6be7db55e6d4179f0ad8",
+        "started_at": "2026-10-22T04:31:19.647887+00:00",
+        "input_sha256": "5d70418572d3ba89ffd585161aa8693b8fc0e77822701b624d43d88fb49f273d",
         "status": "completed",
         "parameters": {
-          "path": "examples/breast_cancer/breast_cancer.csv",
+          "path": "D:\\GitData\\VizJudge\\examples\\breast_cancer\\breast_cancer.csv",
+          "dataset_sha256": "ce2dbe548442b3fd091e3c13d189f69afee544d793313a7d544f5eb97d6c2def",
           "max_input_bytes": 50000000,
           "max_rows": 10000,
           "seed": 42,
           "tool": "profile",
           "timeout": 30
         },
+        "cache": {
+          "key": "42e272442f35de69",
+          "dataset_sha256": "ce2dbe548442b3fd091e3c13d189f69afee544d793313a7d544f5eb97d6c2def",
+          "status": "miss"
+        },
         "output_sha256": "6fc351baa63621bda25251a31f634cc162731f0dff22638daa5946f9a13db04a",
-        "duration_seconds": 0.968
+        "duration_seconds": 0.797
       },
       {
         "id": "T2",
         "tool": "analyze",
         "reason": "Validate candidate signals before rendering.",
-        "started_at": "2026-10-17T07:46:19.388360+00:00",
-        "input_sha256": "8d9fd5f8291f1cac57f743077bf2cd3365e691cd292f046f1e536a8bfd3f9e2d",
+        "started_at": "2026-10-22T04:31:20.440912+00:00",
+        "input_sha256": "4982ea862ca8bd75b56db0a3375a6df3ee6fdd4c0eda98f238bb40fb8937c24b",
         "status": "completed",
         "parameters": {
-          "path": "examples/breast_cancer/breast_cancer.csv",
+          "path": "D:\\GitData\\VizJudge\\examples\\breast_cancer\\breast_cancer.csv",
+          "dataset_sha256": "ce2dbe548442b3fd091e3c13d189f69afee544d793313a7d544f5eb97d6c2def",
           "max_input_bytes": 50000000,
           "max_rows": 10000,
           "seed": 42,
@@ -1826,55 +2591,66 @@
           "tool": "analyze",
           "timeout": 30
         },
-        "output_sha256": "a9405afe5b2724da4e9b759d24b34fde0e4f8b1f85b03eab9d0d308947bdbf2f",
-        "duration_seconds": 1.297
+        "cache": {
+          "key": "42e272442f35de69",
+          "dataset_sha256": "ce2dbe548442b3fd091e3c13d189f69afee544d793313a7d544f5eb97d6c2def",
+          "status": "hit"
+        },
+        "output_sha256": "2ef0f09ad51ca25ca66fb70535b6bb5010ef420fda1412a17254277846c51002",
+        "duration_seconds": 1.859
       },
       {
         "id": "T3",
         "tool": "judge",
         "reason": "Evaluate iteration 1 with cited evidence.",
-        "started_at": "2026-10-17T07:46:20.687245+00:00",
-        "input_sha256": "a693f572f426f6cd8e6279e3a84e9c22a1a64e2f7dd36cdbb1a77eea55ddab66",
+        "started_at": "2026-10-22T04:31:22.308987+00:00",
+        "input_sha256": "45e66f727e1c0c6ed18f659340c99b2693a444d4a4e9d3d82e6f8b0b528acae5",
         "status": "completed",
         "parameters": {
           "judge": null,
           "tool": "judge",
           "timeout": 30
         },
-        "output_sha256": "df76a32bb89db6ef8fb348ffb1dc3347b4f1625f78c4f71b4403295ac03cf10e",
-        "duration_seconds": 0.969
+        "output_sha256": "c9ef8a51e11c13b1f862e2c86ec8331d7619596b48a374b37b9b13502578ebc9",
+        "duration_seconds": 0.782
       },
       {
         "id": "T4",
         "tool": "render",
         "reason": "Render final selected charts within the image budget.",
-        "started_at": "2026-10-17T07:46:21.649937+00:00",
-        "input_sha256": "a87dd59b6831d36179a3e1fd1ab2d5746cc8b65332602346d43363965dcc2d5c",
+        "started_at": "2026-10-22T04:31:23.090595+00:00",
+        "input_sha256": "e0349473826a1038b6804e61c768934588ea7ce4342e2ab5aa4bc453e511b082",
         "status": "completed",
         "parameters": {
-          "path": "examples/breast_cancer/breast_cancer.csv",
+          "path": "D:\\GitData\\VizJudge\\examples\\breast_cancer\\breast_cancer.csv",
+          "dataset_sha256": "ce2dbe548442b3fd091e3c13d189f69afee544d793313a7d544f5eb97d6c2def",
           "max_input_bytes": 50000000,
           "max_rows": 10000,
           "seed": 42,
-          "output_dir": "outputs/sample_report",
+          "output_dir": "D:\\GitData\\VizJudge\\outputs\\sample_report",
           "max_charts": 8,
           "tool": "render",
           "timeout": 30
         },
-        "output_sha256": "4e6ffb1f74cc278936834b5b6f45dd3069db4f309d5f529e88f9ab50e50751d6",
-        "duration_seconds": 1.781
+        "cache": {
+          "key": "42e272442f35de69",
+          "dataset_sha256": "ce2dbe548442b3fd091e3c13d189f69afee544d793313a7d544f5eb97d6c2def",
+          "status": "hit"
+        },
+        "output_sha256": "8b0d2cea9e80f71b4d9b873dbb1992c17d8afdba8922e917344861f71391ab9f",
+        "duration_seconds": 1.328
       }
     ],
-    "duration_seconds": 5.015,
+    "duration_seconds": 4.766,
     "dataset_sha256": "ce2dbe548442b3fd091e3c13d189f69afee544d793313a7d544f5eb97d6c2def",
     "judge_adapter": "statistical_only",
     "runtime": {
       "python": "3.12.10",
       "platform": "win32",
       "dependencies": {
-        "numpy": "2.5.4",
-        "pandas": "3.0.6",
-        "matplotlib": "3.11.2"
+        "numpy": "2.5.2",
+        "pandas": "3.0.5",
+        "matplotlib": "3.11.1"
       }
     }
   }

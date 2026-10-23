@@ -158,7 +158,16 @@ class Executor:
 def refine_report(report: dict[str, Any], judgment: dict[str, Any], action: str) -> dict[str, Any]:
     """Apply one allowed refinement action and refresh the dependent recommendations."""
     priorities = {item["chart_id"]: item for item in judgment["reviews"]}
-    charts = list(report["ranked_charts"])
+    # Unreviewed leakage suspects are deferred as features but stay visible under every
+    # refinement; dropping them would hide exactly what needs a human decision. Once a
+    # host has reviewed one, its verdict applies like any other chart's.
+    leaks = [
+        chart
+        for chart in report["ranked_charts"]
+        if chart["metrics"].get("leakage_suspect")
+        and priorities[chart_key(chart)]["llm_rationale"] is None
+    ]
+    charts = [chart for chart in report["ranked_charts"] if chart not in leaks]
     if action == "prefer_validated":
         charts.sort(
             key=lambda chart: (
@@ -169,7 +178,7 @@ def refine_report(report: dict[str, Any], judgment: dict[str, Any], action: str)
         )
         # Keep at least one chart, but avoid spending attention on unsupported signals.
         supported = [chart for chart in charts if priorities[chart_key(chart)]["verdict"] == "keep"]
-        charts = supported or charts[:1]
+        charts = supported or (charts[:1] if not leaks else [])
     elif action == "increase_diversity":
         seen = set()
         diverse = []
@@ -189,6 +198,7 @@ def refine_report(report: dict[str, Any], judgment: dict[str, Any], action: str)
             )
         )
         charts = charts[: max(1, len(charts) // 2)]
+    charts = leaks + charts
     report["ranked_charts"] = charts
     specs = [
         ChartCandidate(

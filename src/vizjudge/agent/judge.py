@@ -67,6 +67,7 @@ def build_evidence(report: dict[str, Any]) -> dict[str, Any]:
         "target": report["target"],
         "charts": charts,
         "validation_status": report["predictive_validation"]["status"],
+        "signal_status": report.get("signal_assessment", {}).get("status", "not_assessed"),
     }
 
 
@@ -79,7 +80,7 @@ def chart_key(chart: dict[str, Any]) -> str:
     )
 
 
-def confidence(chart: dict[str, Any]) -> dict[str, Any]:
+def confidence(chart: dict[str, Any], *, no_signal: bool = False) -> dict[str, Any]:
     sample = chart["metrics"]["sample_count"]
     predictive = chart["predictive"]
     level, basis = "low", "Descriptive chart evidence only."
@@ -103,6 +104,9 @@ def confidence(chart: dict[str, Any]) -> dict[str, Any]:
             else min(level, "moderate", key={"low": 0, "moderate": 1, "high": 2}.get)
         )
         basis += " Chart warnings limit confidence."
+    if no_signal:
+        level = "low"
+        basis += " No validated feature beat the permutation null; the chart is descriptive."
     return {
         "level": level,
         "basis": basis,
@@ -119,6 +123,7 @@ def judge_report(
     their statistical verdict and priority.
     """
     context = build_evidence(report)
+    no_signal = context["signal_status"] == "no_signal"
     reviews = []
     for chart, evidence in zip(report["ranked_charts"], context["charts"], strict=True):
         predictive = chart["predictive"]
@@ -127,13 +132,19 @@ def judge_report(
             and predictive["status"] == "completed"
             and predictive["incremental_gain"] <= 0
         )
+        # A leak suspect is deferred until someone confirms the column exists at
+        # prediction time; a host review cannot turn the defer back into keep.
+        leak = bool(chart["metrics"].get("leakage_suspect"))
         reviews.append(
             {
                 "chart_id": evidence["chart_id"],
-                "verdict": "defer" if weak else "keep",
+                "verdict": "defer" if weak or leak else "keep",
                 "evidence_ids": [item["id"] for item in evidence["evidence"]],
-                "confidence": confidence(chart),
-                "next_step": "Confirm with a domain-appropriate split before feature selection.",
+                "confidence": confidence(chart, no_signal=no_signal),
+                "next_step": "Confirm the column is known at prediction time and not derived "
+                "from the outcome before using it."
+                if leak
+                else "Confirm with a domain-appropriate split before feature selection.",
                 "statistical_priority": chart["selection_score"],
                 "llm_priority": None,
                 "llm_rationale": None,

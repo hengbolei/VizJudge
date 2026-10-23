@@ -15,7 +15,14 @@ combines coverage, information content, relationship strength, and actionability
 | Numeric target by category | eta, information coefficient and held-out RMSE | category effects, encoding |
 
 Scores are clamped to `[0, 100]`. Missingness reduces coverage but can itself create an
-actionable observation. Constant, identifier, and free-text columns are profiled but excluded
+actionable observation.
+
+With a target, distribution charts carry no target evidence, so they score only what
+makes them actionable: `20 × min(|skew| / 2, 1)` for histograms and `20 × max(rare-level
+share, high-cardinality excess)` for category bars, on top of the same coverage/sample
+base. A well-behaved noise column therefore scores like a targeted chart with zero
+relevance (about 45) and can no longer outrank a feature with measured target signal.
+Without a target, the original spread/skew and entropy points apply. Constant, identifier, and free-text columns are profiled but excluded
 from ordinary chart generation.
 
 ## Target relevance (schema 0.5)
@@ -35,7 +42,19 @@ Targeted charts start from `10 + 25 × coverage + 10 × min(1, n / 100)` and add
   house prices). An observation is added when it exceeds the linear value by 0.15.
 
 `relevance = 0.5 × linear + 0.5 × information_coefficient` is stored in `metrics`.
-The near-perfect leakage warning uses the linear value (≥ 0.95). Sparse groups
+When the feature has missing values, `missingness_association` (Cramér's V, or eta for
+regression, between "feature is missing" and the target) is also measured, and
+relevance becomes the larger of the two. Complete-case metrics are blind to a column
+that is only filled after the outcome: it is missing for one class, so eta and the
+information coefficient see a single group.
+
+**Leakage.** A targeted chart is a `leakage_suspect` (metric `1`, plus a warning) when
+any of `absolute_correlation`, `eta`, `cramers_v`, `information_coefficient`,
+or `missingness_association` is at least 0.95, or `held_out_strength` is at least 0.98
+(ROC-AUC 0.99; 0.95 would be AUC 0.975, which clean strong features reach). Suspects are selected
+ahead of the score ranking (one per leaking signal), listed in the report's
+`leakage_alerts`, get the statistical verdict `defer`, and stay in the chart set under
+statistical-only refinement until a host review covers them. Sparse groups
 (< 5 rows) now cost `15 × share of sparse groups` instead of a flat 15, so one rare
 level no longer sinks a feature.
 
@@ -47,6 +66,17 @@ level no longer sinks a feature.
 - High-cardinality categories are summarized and may need domain-aware grouping.
 - Small samples can produce unstable relationship scores.
 - Target leakage requires semantic and temporal review beyond statistics.
+
+## Is there any signal? (permutation null)
+
+Chart scores are relative, so some chart always ranks first. After validation, the
+target is shuffled 49 times (seeded) on the same folds and the best feature's mean
+held-out gain is recomputed. The p-value is `(1 + #{permuted ≥ observed}) / 50`,
+reported in `predictive_validation.null_test`. The report's `signal_assessment` is
+`signal` when p ≤ 0.05, `no_signal` otherwise, or `not_assessed` when validation did
+not run. With `no_signal`, the report's first warning says the charts are descriptive
+only, and every chart's confidence is `low`. On synthetic pure-noise data the false
+positive rate is 3–5%. It costs about one extra second at the 5,000-row × 20-feature cap.
 
 ## Predictive adjustment and selection (schema 0.5)
 

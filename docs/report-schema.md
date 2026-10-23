@@ -12,8 +12,14 @@ Added complete-report fields:
 - `task`: `classification`, `regression`, or null for an untargeted run.
 - `role_overrides` and `configuration`: reproducible task/ranking/validation settings.
 - `predictive_validation`: completed/skipped status, reason, method, split, metric,
-  row/feature limits, sampling, fold settings, warnings, baseline and feature results.
-- `warnings`: chart-level warnings for the selected charts.
+  row/feature limits, sampling, fold settings, warnings, baseline and feature results,
+  and `null_test` (permutation p-value of the best feature's gain).
+- `signal_assessment`: `status` (`signal`, `no_signal`, `not_assessed`), the
+  permutation `p_value` when assessed, and a `message`.
+- `leakage_alerts`: every candidate flagged as a leakage suspect, selected or not:
+  `chart`, `feature`, `warning`.
+- `warnings`: the no-signal message when applicable, then chart-level warnings for
+  the selected charts.
 
 Each chart preserves `kind`, `title`, `x`, `y`, `target`, `score`, `reasons`,
 `observations`, and `image`; added fields are:

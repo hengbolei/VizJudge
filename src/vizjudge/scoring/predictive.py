@@ -19,6 +19,8 @@ MAX_FEATURES = 20
 MAX_LEVELS = 20
 NUMERIC_BINS = 8
 FORWARD_STEPS = 10
+NULL_PERMUTATIONS = 49
+NULL_ALPHA = 0.05
 
 
 def validate_options(cv_folds: int, seed: int, baseline_features: list[str] | None) -> None:
@@ -110,11 +112,24 @@ class _Fold:
             test_parts.append(right[:, 1:])
             self.columns[name] = np.arange(width, width + left.shape[1] - 1)
             width += left.shape[1] - 1
-        design = np.concatenate(train_parts, axis=1)
+        self.design = np.concatenate(train_parts, axis=1)
         self.test = np.concatenate(test_parts, axis=1)
-        self.gram = design.T @ design
-        self.cross = design.T @ response
+        self.gram = self.design.T @ self.design
+        self.cross = self.design.T @ response
         self.actual, self.task = actual, task
+
+    def relabeled(self, response: np.ndarray, actual: np.ndarray) -> _Fold:
+        """The same fold with a different response; reuses the design and Gram matrix."""
+        fold = object.__new__(_Fold)
+        fold.columns, fold.design, fold.test, fold.gram = (
+            self.columns,
+            self.design,
+            self.test,
+            self.gram,
+        )
+        fold.cross = self.design.T @ response
+        fold.actual, fold.task = actual, self.task
+        return fold
 
     def score(self, names: list[str]) -> float:
         index = np.concatenate([[0], *(self.columns[name] for name in names)]).astype(int)
@@ -232,10 +247,12 @@ def validate_predictive_value(
         result["reason"] = "no_eligible_features"
         return result
     cache = []
+    splits = []
     for test_indices in folds:
         train_mask = np.ones(len(subset), dtype=bool)
         train_mask[test_indices] = False
         train_indices = np.flatnonzero(train_mask)
+        splits.append((train_indices, test_indices))
         cache.append(
             _Fold(
                 subset.iloc[train_indices],
@@ -275,7 +292,60 @@ def validate_predictive_value(
         result["forward_selection"] = _forward(
             cache, baseline, baseline_scores, feature_scores, result, forward_steps
         )
+    result["null_test"] = _null_test(
+        cache, splits, baseline, selected, response, actual, task, result, rng
+    )
     return result
+
+
+def _null_test(
+    cache: list[_Fold],
+    splits: list[tuple[np.ndarray, np.ndarray]],
+    baseline: list[str],
+    selected: list[str],
+    response: np.ndarray,
+    actual: np.ndarray,
+    task: str,
+    result: dict[str, Any],
+    rng: np.random.Generator,
+) -> dict[str, Any]:
+    """Permutation test of the best feature's mean held-out gain on the same folds.
+
+    Shuffling the target breaks every feature-target link, so the permuted maxima form
+    the gain the best of these features reaches by chance. Without it some chart always
+    looks "worth seeing", even on pure noise.
+    """
+    candidates = [name for name in selected if name not in baseline]
+    if not candidates:
+        return {"status": "skipped", "reason": "no_candidate_features"}
+
+    def best_gain(folds: list[_Fold]) -> float:
+        reference = [fold.score(baseline) for fold in folds]
+        return max(
+            float(_gains([fold.score([*baseline, name]) for fold in folds], reference, task).mean())
+            for name in candidates
+        )
+
+    observed = max(result["features"][name]["incremental_gain"] for name in candidates)
+    exceed = 0
+    for _ in range(NULL_PERMUTATIONS):
+        order = rng.permutation(len(actual))
+        shuffled_response, shuffled_actual = response[order], actual[order]
+        folds = [
+            fold.relabeled(shuffled_response[train], shuffled_actual[test])
+            for fold, (train, test) in zip(cache, splits, strict=True)
+        ]
+        exceed += best_gain(folds) >= observed
+    p_value = (1 + exceed) / (1 + NULL_PERMUTATIONS)
+    return {
+        "status": "completed",
+        "statistic": "max_mean_incremental_gain",
+        "observed": round(observed, 6),
+        "permutations": NULL_PERMUTATIONS,
+        "p_value": round(p_value, 6),
+        "alpha": NULL_ALPHA,
+        "signal_detected": p_value <= NULL_ALPHA,
+    }
 
 
 def _gains(scores: list[float], reference: list[float], task: str) -> np.ndarray:
