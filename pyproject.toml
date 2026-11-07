@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vizjudge"
-version = "0.5.0"
-description = "Rank visualization value and turn chart evidence into machine-learning actions."
+version = "0.6.0"
+description = "Rank which EDA charts matter for a model, flag leakage, and expose the evidence to LLM agents over MCP."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
-authors = [{ name = "VizJudge contributors" }]
-keywords = ["eda", "machine-learning", "visualization", "mcp", "agent-skill"]
+authors = [{ name = "hengbolei" }]
+keywords = ["eda", "machine-learning", "visualization", "feature-selection", "data-leakage", "mcp", "llm-agents", "agent-skill"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "License :: OSI Approved :: MIT License",
@@ -52,6 +52,11 @@ dev = [
 [project.scripts]
 vizjudge = "vizjudge.cli:main"
 vizjudge-mcp = "vizjudge.mcp.server:main"
+
+# Keep the sdist to what is needed to build and test; lockfile, benchmark results and
+# rendered sample outputs stay in the repository only.
+[tool.hatch.build.targets.sdist]
+include = ["/src/vizjudge", "/skills/vizjudge", "/tests", "/README.md", "/CHANGELOG.md", "/LICENSE"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/vizjudge"]

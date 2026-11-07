@@ -1,13 +1,33 @@
 # VizJudge
 
+[![PyPI](https://img.shields.io/pypi/v/vizjudge)](https://pypi.org/project/vizjudge/)
+[![Python](https://img.shields.io/pypi/pyversions/vizjudge)](https://pypi.org/project/vizjudge/)
+[![CI](https://github.com/hengbolei/VizJudge/actions/workflows/ci.yml/badge.svg)](https://github.com/hengbolei/VizJudge/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 [English](README.md) | **简体中文**
 
-**生成候选图表，判断哪些图表值得关注，并把这些证据转化为机器学习的下一步行动。**
+**VizJudge 告诉你：哪些 EDA 图表对你的模型真正有用，以及为什么。** 它为数据表生成候选图表，
+用留出集上的预测证据给每张图打分，标记数据泄漏和"没有信号"的数据集，只渲染最值得看的几张，
+并写出数据质量、特征工程和建模的下一步行动。每条结论都带有证据 ID，LLM Agent 可以通过 MCP
+使用这些结果，而不会凭空编造。
 
-VizJudge 不是又一个自动 EDA 报告生成器。它关心的核心问题不是"能画多少张图"，而是
-**"哪些图有用，它们对数据质量、特征工程和建模意味着什么？"**
+```bash
+pip install vizjudge
+vizjudge analyze data.csv --target outcome --output report/
+```
 
-> 面向机器学习流程的图表价值判断器：少画图、看重点、给出下一步。
+## 有什么不同
+
+- **给证据，而不只是给图。** 每张图都用固定随机种子的交叉验证，计算相对基线的*增量*收益，
+  并和置换检验（permutation null）比较。在纯噪声数据上，报告会给出 `no_signal`，而不是编造规律。
+- **泄漏告警。** 留出集表现近乎完美、或缺失模式与目标变量强相关（结果发生后才产生的字段常见此特征）的列
+  会被标记并优先选出，确保在建模前被人工审查。
+- **为 LLM Agent 设计。** 7 个细粒度 MCP 工具加一个随包分发的 Agent skill，让 Claude Code 等宿主
+  担任 Judge。宿主只能引用统计流程产生的证据 ID，只能降低图表优先级，不能提高。
+- **如实评测。** 在 10 个公开数据集上与互信息、ppscore、dabl、AutoViz 和随机选择对比：
+  使用线性模型时，VizJudge 选出的特征平均排名最好（2.76，互信息为 3.11）；使用梯度提升树时与互信息持平。
+  输掉的结果也一并公开，见 [benchmark](docs/benchmark.md)。
 
 ## 输出示例
 
@@ -29,7 +49,7 @@ VizJudge 不是又一个自动 EDA 报告生成器。它关心的核心问题不
 - Selection score: 74.4 (diversity penalty: 5.0): this chart family is already represented.
 ```
 
-离线复现命令：
+克隆仓库后可离线复现：
 `uv run vizjudge agent examples/breast_cancer/breast_cancer.csv --target diagnosis --task classification --seed 42 --output outputs/sample_report`。
 
 ## 与同类工具的区别
@@ -79,22 +99,19 @@ VizJudge 的得分是决策辅助，而不是统计证明。它们有意保持�
 
 ## 快速开始
 
-推荐使用 [`uv`](https://docs.astral.sh/uv/) 作为包管理器：它能快速创建可复现的环境，并在一个工具里管理项目、锁文件、工具和发布流程。
+```bash
+pip install vizjudge                 # MCP 服务加 [mcp]，读取 Parquet 加 [parquet]
+vizjudge analyze data.csv --target survived --output outputs/run
+```
+
+从源码开发时，用 [`uv`](https://docs.astral.sh/uv/) 获得锁定版本的开发环境：
 
 ```bash
 uv sync --extra dev
 uv run vizjudge analyze data.csv --target survived --output outputs/run
 ```
 
-传统的 `pip` 也可以：
-
-```bash
-python -m venv .venv
-python -m pip install -e .
-vizjudge analyze data.csv --target survived --output outputs/run
-```
-
-读取 Parquet 需要可选依赖 `parquet`：`uv sync --extra parquet`。
+读取 Parquet 需要可选依赖 `parquet`（`pip install "vizjudge[parquet]"`）。
 
 输出目录包含 `report.json`、`summary.md` 以及排名靠前的图表 PNG 文件；Agent 运行还会写出 `execution.json`。
 使用 `--no-render` 只做结构化分析。`--task regression` 或 `--task classification` 可以消除目标变量类型的歧义；
@@ -105,7 +122,7 @@ vizjudge analyze data.csv --target survived --output outputs/run
 同一个包同时提供 MCP server 和 skill：
 
 ```bash
-pip install "vizjudge[mcp] @ git+https://github.com/hengbolei/VizJudge"
+pip install "vizjudge[mcp]"
 vizjudge skill install                  # 把 skill 复制到 ~/.agents/skills/vizjudge
 vizjudge mcp-config --client dsh        # 或：--client json | --client claude
 vizjudge doctor                         # 检查解释器、mcp 和已安装的 skill
@@ -158,8 +175,9 @@ vizjudge --version
 
 ## 项目状态
 
-这是一个 alpha 质量、本地优先的 v0.5 实现。Agent 循环、预测性检验、基于证据的 Judge 集成和执行预算都已实现。
-在线 Judge 的质量和对下游模型效果的影响仍需基准测试；图像/OCR 输入和操作系统级沙箱属于后续工作。
+这是一个 alpha 质量、本地优先的 v0.6 实现。Agent 循环、预测性检验、泄漏告警、置换检验、基于证据的 Judge 集成和执行预算都已实现。
+[下游模型基准测试](docs/benchmark.md) 显示：VizJudge 的特征优先级明显优于随机选择，线性模型下平均排名最好，
+梯度提升树下与互信息持平（AutoViz 在该场景排名最好）。在线 Judge 的质量仍需基准测试；图像/OCR 输入和操作系统级沙箱属于后续工作。
 详见 [路线图](docs/roadmap.md) 和 [报告格式迁移指南](docs/report-schema.md)。
 
 ## 开发

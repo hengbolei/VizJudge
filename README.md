@@ -1,22 +1,46 @@
 # VizJudge
 
-**English** | [简体中文](README.zh-CN.md)
+[![PyPI](https://img.shields.io/pypi/v/vizjudge)](https://pypi.org/project/vizjudge/)
+[![Python](https://img.shields.io/pypi/pyversions/vizjudge)](https://pypi.org/project/vizjudge/)
+[![CI](https://github.com/hengbolei/VizJudge/actions/workflows/ci.yml/badge.svg)](https://github.com/hengbolei/VizJudge/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/hengbolei/VizJudge/blob/main/LICENSE)
 
-**Generate candidate visualizations, judge which charts are worth attention, and turn the
-evidence into machine-learning actions.**
+**English** | [简体中文](https://github.com/hengbolei/VizJudge/blob/main/README.zh-CN.md)
 
-VizJudge is not another automatic EDA report generator. Its central question is not
-"how many charts can we draw?" but **"which charts are useful, and what do they imply for
-data quality, feature engineering, and modeling?"**
+**VizJudge tells you which EDA charts matter for your model, and why.** It generates
+candidate charts for a table, scores each one by held-out predictive evidence, flags
+leakage and "no signal" datasets, renders only the top few, and writes the next
+data-quality, feature and modeling actions. Every claim carries an evidence ID, so an
+LLM agent can use the results over MCP without making things up.
 
-> 面向机器学习流程的图表价值判断器：少画图、看重点、给出下一步。
+```bash
+pip install vizjudge
+vizjudge analyze data.csv --target outcome --output report/
+```
+
+## Why it is different
+
+- **Evidence, not just pictures.** Each chart is scored by seeded cross-validated
+  *incremental* gain over a baseline and checked against a permutation null. On pure
+  noise the report says `no_signal` instead of inventing patterns.
+- **Leakage alerts.** Columns with near-perfect held-out strength or missingness that
+  tracks the target (typical of post-outcome fields) are flagged and selected first, so
+  they are reviewed before modeling.
+- **Built for LLM agents.** Seven fine-grained MCP tools and a bundled agent skill let
+  Claude Code or other hosts act as the judge. The host can only cite evidence IDs the
+  statistical pipeline produced, and can lower a chart's priority but never raise it.
+- **Honestly benchmarked.** On 10 public datasets against mutual information, ppscore,
+  dabl, AutoViz and random selection, VizJudge's top features have the best average rank
+  with linear models (2.76 vs 3.11 for mutual information) and are level with mutual
+  information for gradient boosting. Losses are reported too: see the
+  [benchmark](https://github.com/hengbolei/VizJudge/blob/main/docs/benchmark.md).
 
 ## What the output looks like
 
 Real output on the Breast Cancer Wisconsin data (569 rows, 30 features, 60 candidate
-charts judged, 6 rendered). Full report: [`outputs/sample_report`](outputs/sample_report/summary.md).
+charts judged, 6 rendered). Full report: [`outputs/sample_report`](https://github.com/hengbolei/VizJudge/blob/main/outputs/sample_report/summary.md).
 
-<img src="outputs/sample_report/01-target_box__diagnosis__worst_perimeter__diagnosis.png" alt="worst_perimeter by diagnosis" width="420">
+<img src="https://raw.githubusercontent.com/hengbolei/VizJudge/main/outputs/sample_report/01-target_box__diagnosis__worst_perimeter__diagnosis.png" alt="worst_perimeter by diagnosis" width="420">
 
 ```text
 - Signal: The best validated feature beats the permutation null (p = 0.020).
@@ -31,7 +55,7 @@ charts judged, 6 rendered). Full report: [`outputs/sample_report`](outputs/sampl
 - Selection score: 74.4 (diversity penalty: 5.0): this chart family is already represented.
 ```
 
-Reproduce it offline with
+Reproduce it from a clone with
 `uv run vizjudge agent examples/breast_cancer/breast_cancer.csv --target diagnosis --task classification --seed 42 --output outputs/sample_report`.
 
 ## How VizJudge differs
@@ -52,7 +76,7 @@ VizJudge's core is deterministic statistical judgment: candidate charts, signal
 metrics, held-out incremental gain, diversity selection and stable evidence IDs.
 Host agents such as Claude Code already have an LLM plus the user's domain context
 and code, so VizJudge is built to be **called by them**: the
-[skill](skills/vizjudge/SKILL.md) makes the host model the Judge, and fine-grained
+[skill](https://github.com/hengbolei/VizJudge/blob/main/skills/vizjudge/SKILL.md) makes the host model the Judge, and fine-grained
 MCP tools (`profile_dataset` → `generate_candidates` → `validate_features` →
 `select_charts` → `render_charts`) supply evidence it must cite. The host can only
 lower statistical priority, never raise it, and turns kept evidence into concrete
@@ -70,8 +94,8 @@ python examples/agent_loop/demo.py --output outputs/demo-v04
 The batch loop is statistical-only by default. An LLM Judge is optional: replay a
 recorded JSON response, or configure your own HTTP Judge endpoint. The demo uses
 seeded synthetic data and a simulated offline Judge; it needs no credentials. See
-[Agent workflow, host tools, Judge contract, and budgets](docs/agent.md), the
-[demo](examples/agent_loop/README.md), and [release notes](CHANGELOG.md).
+[Agent workflow, host tools, Judge contract, and budgets](https://github.com/hengbolei/VizJudge/blob/main/docs/agent.md), the
+[demo](https://github.com/hengbolei/VizJudge/blob/main/examples/agent_loop/README.md), and [release notes](https://github.com/hengbolei/VizJudge/blob/main/CHANGELOG.md).
 
 ## Analysis capabilities
 
@@ -86,29 +110,24 @@ seeded synthetic data and a simulated offline Judge; it needs no credentials. Se
    through Python, CLI, and MCP.
 
 VizJudge's scores are decision aids, not statistical proof. They intentionally remain
-transparent and deterministic; see [Scoring](docs/scoring.md). Confidence labels
+transparent and deterministic; see [Scoring](https://github.com/hengbolei/VizJudge/blob/main/docs/scoring.md). Confidence labels
 describe evidence for prioritization, rather than statistical probabilities.
 
 ## Quick start
 
-[`uv`](https://docs.astral.sh/uv/) is the recommended package manager because it provides
-fast, reproducible environments and can manage the project, lockfile, tools, and publishing
-workflow in one place.
+```bash
+pip install vizjudge                 # add [mcp] for the MCP server, [parquet] for Parquet input
+vizjudge analyze data.csv --target survived --output outputs/run
+```
+
+From a clone, [`uv`](https://docs.astral.sh/uv/) gives the pinned development environment:
 
 ```bash
 uv sync --extra dev
 uv run vizjudge analyze data.csv --target survived --output outputs/run
 ```
 
-Traditional `pip` also works:
-
-```bash
-python -m venv .venv
-python -m pip install -e .
-vizjudge analyze data.csv --target survived --output outputs/run
-```
-
-Parquet input uses the optional `parquet` extra: `uv sync --extra parquet`.
+Parquet input uses the optional `parquet` extra (`pip install "vizjudge[parquet]"`).
 
 The output directory contains `report.json`, `summary.md`, and PNG files for the ranked
 charts. Agent runs also write `execution.json`. Use `--no-render` for structured
@@ -120,7 +139,7 @@ targets; repeat `--role COLUMN=ROLE` for domain-specific role overrides.
 One package provides both the MCP server and the skill:
 
 ```bash
-pip install "vizjudge[mcp] @ git+https://github.com/hengbolei/VizJudge"
+pip install "vizjudge[mcp]"
 vizjudge skill install                  # copies the skill to ~/.agents/skills/vizjudge
 vizjudge mcp-config --client dsh        # or: --client json | --client claude
 vizjudge doctor                         # checks the interpreter, mcp and installed skills
@@ -129,7 +148,7 @@ vizjudge doctor                         # checks the interpreter, mcp and instal
 `mcp-config` prints a registration for the current interpreter
 (`python -m vizjudge.mcp.server`), so the host needs no PATH or virtual-environment
 setup. `--client json` prints the common `mcpServers` format used by many hosts.
-Step-by-step host guide: [DeepSeek Harness](docs/integrations/deepseek-harness.md).
+Step-by-step host guide: [DeepSeek Harness](https://github.com/hengbolei/VizJudge/blob/main/docs/integrations/deepseek-harness.md).
 
 ## MCP server
 
@@ -153,7 +172,7 @@ directory.
 
 ## Agent Skill
 
-The skill lives at [`skills/vizjudge`](skills/vizjudge) and is bundled in the wheel.
+The skill lives at [`skills/vizjudge`](https://github.com/hengbolei/VizJudge/blob/main/skills/vizjudge) and is bundled in the wheel.
 `vizjudge skill install` copies it to `~/.agents/skills` (`--target dsh|claude`,
 `--project` for the current project, or `--dest DIR`). Codex can invoke it from the
 repository as `$vizjudge`. It checks its own prerequisites first and falls back to the CLI
@@ -179,17 +198,18 @@ vizjudge --version
 
 ## Project status
 
-This is an alpha-quality, local-first v0.5 implementation. The Agent loop,
-predictive checks, evidence-grounded Judge integration and execution budgets are
-implemented. A first [downstream-model benchmark](docs/benchmark.md) shows VizJudge's
-feature priorities beat random selection but not mutual information or AutoViz for
-gradient boosting; Live Judge quality still needs benchmarks, and image/OCR ingestion and
-OS-level sandboxing are future work. See the
-[roadmap](docs/roadmap.md) and [schema migration guide](docs/report-schema.md).
+This is an alpha-quality, local-first v0.6 implementation. The Agent loop,
+predictive checks, leakage alerts, the permutation null test, evidence-grounded Judge
+integration and execution budgets are implemented. The
+[downstream-model benchmark](https://github.com/hengbolei/VizJudge/blob/main/docs/benchmark.md) shows VizJudge's feature priorities clearly
+beat random selection, lead on average rank with linear models and are level with mutual
+information for gradient boosting, where AutoViz still ranks best. Live Judge quality still
+needs benchmarks, and image/OCR ingestion and OS-level sandboxing are future work. See the
+[roadmap](https://github.com/hengbolei/VizJudge/blob/main/docs/roadmap.md) and [schema migration guide](https://github.com/hengbolei/VizJudge/blob/main/docs/report-schema.md).
 
 ## Development
 
-Dependencies are pinned in [`uv.lock`](uv.lock); CI runs lint and tests on Linux and
+Dependencies are pinned in [`uv.lock`](https://github.com/hengbolei/VizJudge/blob/main/uv.lock); CI runs lint and tests on Linux and
 Windows with Python 3.11 and 3.12, then builds and smoke-tests the wheel.
 
 ```bash
@@ -200,4 +220,4 @@ uv run ruff check .
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/hengbolei/VizJudge/blob/main/LICENSE)
