@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 — 2026-11-07
 
 - Fixes from an external review (all additive to report schema 0.5):
   - With a target, distribution charts score only actionable shape (skew, rare levels),

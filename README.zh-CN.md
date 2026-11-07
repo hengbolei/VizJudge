@@ -3,7 +3,7 @@
 [English](README.md) | **简体中文**
 
 [![CI](https://github.com/hengbolei/VizJudge/actions/workflows/ci.yml/badge.svg)](https://github.com/hengbolei/VizJudge/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/hengbolei/VizJudge)](https://github.com/hengbolei/VizJudge/releases)
+[![PyPI](https://img.shields.io/pypi/v/vizjudge)](https://pypi.org/project/vizjudge/)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -16,6 +16,7 @@
 
 - **少而精，按证据排序。** 每张候选图都会根据信号强度和固定随机种子的交叉验证增量收益打分，并施加冗余与多样性惩罚，最后只渲染排名靠前的几张。
 - **透明。** 每张图的得分、各折收益、理由和稳定的证据 ID 都写在 `report.json` 里，不是黑盒过滤。
+- **泄漏和"无信号"告警。** 留出集表现近乎完美、或缺失模式与目标变量强相关的列会被标记并优先选出；置换检验让纯噪声数据的报告给出 `no_signal`，而不是编造规律。
 - **为 Agent 设计。** 细粒度的 MCP 工具和自带的 skill 让 Claude Code 这类宿主 Agent 担任 Judge。宿主必须引用 VizJudge 给出的证据，而且只能降低统计优先级，不能提高。
 - **有实测。** 在 10 个公开数据集上做了[下游模型基准测试](docs/benchmark.md)，检验它排在前面的特征是否真能训练出更好的模型（见[基准测试](#基准测试)）。
 
@@ -39,25 +40,20 @@
 - Selection score: 74.4 (diversity penalty: 5.0): this chart family is already represented.
 ```
 
-这份示例使用的是报告格式 0.4。当前 `main` 分支输出格式 0.5，评分方式也有调整（见[更新日志](CHANGELOG.md)），所以重新运行得到的分数会有所不同。
-
 ## 快速开始
 
-VizJudge 还没有发布到 PyPI。克隆仓库后运行自带的示例即可，全程离线，不需要 API 密钥。推荐使用 [`uv`](https://docs.astral.sh/uv/)：
+```bash
+pip install vizjudge
+vizjudge analyze data.csv --target outcome --output outputs/run
+```
+
+想复现上面的示例，克隆仓库后运行自带的例子即可，全程离线，不需要 API 密钥。推荐使用 [`uv`](https://docs.astral.sh/uv/)：
 
 ```bash
 git clone https://github.com/hengbolei/VizJudge.git
 cd VizJudge
 uv sync
 uv run vizjudge agent examples/breast_cancer/breast_cancer.csv --target diagnosis --task classification --seed 42 --output outputs/breast-cancer
-```
-
-也可以用 `pip`：
-
-```bash
-python -m venv .venv
-python -m pip install -e .
-vizjudge analyze examples/breast_cancer/breast_cancer.csv --target diagnosis --output outputs/run
 ```
 
 输出目录包含 `report.json`、`summary.md` 以及排名靠前的图表 PNG；Agent 运行还会写出 `execution.json`，记录预算和工具调用轨迹。
@@ -67,14 +63,14 @@ vizjudge analyze examples/breast_cancer/breast_cancer.csv --target diagnosis --o
 | `--no-render` | 只做结构化分析，不生成图片 |
 | `--task classification` / `--task regression` | 消除目标变量类型的歧义 |
 | `--role COLUMN=ROLE`（可重复） | 覆盖自动推断的列角色 |
-| `uv sync --extra parquet` | 启用 Parquet 输入（CSV 和 JSON/JSONL 默认支持） |
+| `pip install "vizjudge[parquet]"` | 启用 Parquet 输入（CSV 和 JSON/JSONL 默认支持） |
 
 ## 在 Agent 中使用
 
 同一个包同时提供 MCP server 和 skill：
 
 ```bash
-pip install "vizjudge[mcp] @ git+https://github.com/hengbolei/VizJudge"
+pip install "vizjudge[mcp]"
 vizjudge skill install                  # 把 skill 复制到 ~/.agents/skills/vizjudge
 vizjudge mcp-config --client claude     # 或：--client dsh | --client json
 vizjudge doctor                         # 检查解释器、mcp 和已安装的 skill
@@ -193,7 +189,7 @@ vizjudge --version
 
 ## 项目状态
 
-alpha 阶段、本地优先，版本 v0.5。Agent 循环、预测性检验、基于证据的 Judge 集成、执行预算和下游模型基准测试都已完成。
+alpha 阶段、本地优先，版本 v0.6。Agent 循环、预测性检验、泄漏告警、置换检验、基于证据的 Judge 集成、执行预算和下游模型基准测试都已完成。
 接下来计划：评估在线 Judge 的质量、支持图像/OCR 输入，以及操作系统级沙箱。详见 [路线图](docs/roadmap.md)、
 [报告格式指南](docs/report-schema.md) 和 [更新日志](CHANGELOG.md)。
 

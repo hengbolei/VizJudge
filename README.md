@@ -1,11 +1,11 @@
 # VizJudge
 
-**English** | [简体中文](README.zh-CN.md)
+**English** | [简体中文](https://github.com/hengbolei/VizJudge/blob/main/README.zh-CN.md)
 
 [![CI](https://github.com/hengbolei/VizJudge/actions/workflows/ci.yml/badge.svg)](https://github.com/hengbolei/VizJudge/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/hengbolei/VizJudge)](https://github.com/hengbolei/VizJudge/releases)
-[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](pyproject.toml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/vizjudge)](https://pypi.org/project/vizjudge/)
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://github.com/hengbolei/VizJudge/blob/main/pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/hengbolei/VizJudge/blob/main/LICENSE)
 
 **Generate candidate charts, judge which ones are worth a modeler's attention, and turn the
 evidence into machine-learning actions.**
@@ -19,19 +19,22 @@ and modeling?"**
   the top few are rendered.
 - **Transparent.** Each chart carries its scores, fold gains, reasons and stable evidence
   IDs in `report.json`. No black-box filter.
+- **Leakage and no-signal alerts.** Columns with near-perfect held-out strength or
+  missingness that tracks the target are flagged and selected first; a permutation null
+  test makes a report on pure noise say `no_signal` instead of inventing patterns.
 - **Built for agents.** Fine-grained MCP tools and a bundled skill let a host agent such as
   Claude Code act as the Judge. The host must cite VizJudge's evidence and can only lower
   statistical priority, never raise it.
-- **Measured.** A [downstream-model benchmark](docs/benchmark.md) on 10 public datasets
+- **Measured.** A [downstream-model benchmark](https://github.com/hengbolei/VizJudge/blob/main/docs/benchmark.md) on 10 public datasets
   tests whether its top-ranked features actually make better models (see
   [Benchmark](#benchmark)).
 
 ## What the output looks like
 
 Real output on the Breast Cancer Wisconsin data (569 rows, 30 features, 60 candidate
-charts judged, 6 rendered). Full report: [`outputs/sample_report`](outputs/sample_report/summary.md).
+charts judged, 6 rendered). Full report: [`outputs/sample_report`](https://github.com/hengbolei/VizJudge/blob/main/outputs/sample_report/summary.md).
 
-<img src="outputs/sample_report/01-target_box__diagnosis__worst_perimeter__diagnosis.png" alt="worst_perimeter by diagnosis" width="420">
+<img src="https://raw.githubusercontent.com/hengbolei/VizJudge/main/outputs/sample_report/01-target_box__diagnosis__worst_perimeter__diagnosis.png" alt="worst_perimeter by diagnosis" width="420">
 
 ```text
 - Signal: The best validated feature beats the permutation null (p = 0.020).
@@ -46,27 +49,21 @@ charts judged, 6 rendered). Full report: [`outputs/sample_report`](outputs/sampl
 - Selection score: 74.4 (diversity penalty: 5.0): this chart family is already represented.
 ```
 
-This sample uses report schema 0.4. Current `main` writes schema 0.5 with revised scoring
-(see the [changelog](CHANGELOG.md)), so a fresh run gives somewhat different scores.
-
 ## Quick start
 
-VizJudge is not on PyPI yet. Clone it and run the bundled example. It works offline and
-needs no API key. [`uv`](https://docs.astral.sh/uv/) is recommended:
+```bash
+pip install vizjudge
+vizjudge analyze data.csv --target outcome --output outputs/run
+```
+
+To reproduce the sample above, clone the repository and run the bundled example. It works
+offline and needs no API key. [`uv`](https://docs.astral.sh/uv/) is recommended:
 
 ```bash
 git clone https://github.com/hengbolei/VizJudge.git
 cd VizJudge
 uv sync
 uv run vizjudge agent examples/breast_cancer/breast_cancer.csv --target diagnosis --task classification --seed 42 --output outputs/breast-cancer
-```
-
-Or with `pip`:
-
-```bash
-python -m venv .venv
-python -m pip install -e .
-vizjudge analyze examples/breast_cancer/breast_cancer.csv --target diagnosis --output outputs/run
 ```
 
 The output directory contains `report.json`, `summary.md` and PNGs for the ranked charts;
@@ -77,14 +74,14 @@ agent runs also write `execution.json` with the budget and tool trace.
 | `--no-render` | Structured analysis only, no images |
 | `--task classification` / `--task regression` | Resolves ambiguous targets |
 | `--role COLUMN=ROLE` (repeatable) | Overrides an inferred column role |
-| `uv sync --extra parquet` | Enables Parquet input (CSV and JSON/JSONL work by default) |
+| `pip install "vizjudge[parquet]"` | Enables Parquet input (CSV and JSON/JSONL work by default) |
 
 ## Use it from an agent
 
 One package provides both the MCP server and the skill:
 
 ```bash
-pip install "vizjudge[mcp] @ git+https://github.com/hengbolei/VizJudge"
+pip install "vizjudge[mcp]"
 vizjudge skill install                  # copies the skill to ~/.agents/skills/vizjudge
 vizjudge mcp-config --client claude     # or: --client dsh | --client json
 vizjudge doctor                         # checks the interpreter, mcp and installed skills
@@ -93,7 +90,7 @@ vizjudge doctor                         # checks the interpreter, mcp and instal
 `mcp-config` prints a registration for the current interpreter
 (`python -m vizjudge.mcp.server`), so the host needs no PATH or virtual-environment setup.
 `--client json` prints the common `mcpServers` format used by many hosts. Step-by-step
-host guide: [DeepSeek Harness](docs/integrations/deepseek-harness.md).
+host guide: [DeepSeek Harness](https://github.com/hengbolei/VizJudge/blob/main/docs/integrations/deepseek-harness.md).
 
 ## How it works
 
@@ -140,14 +137,14 @@ python examples/agent_loop/demo.py --output outputs/demo   # offline, simulated 
 
 Scores are decision aids, not statistical proof, and confidence labels describe evidence
 for prioritization rather than probabilities. Details:
-[Agent workflow and Judge contract](docs/agent.md) · [Scoring](docs/scoring.md) ·
-[Agent loop demo](examples/agent_loop/README.md).
+[Agent workflow and Judge contract](https://github.com/hengbolei/VizJudge/blob/main/docs/agent.md) · [Scoring](https://github.com/hengbolei/VizJudge/blob/main/docs/scoring.md) ·
+[Agent loop demo](https://github.com/hengbolei/VizJudge/blob/main/examples/agent_loop/README.md).
 
 ## Benchmark
 
 If VizJudge's ranking is useful, a model trained only on the features behind its top-K
 charts should beat one trained on features picked by other tools. The
-[benchmark](docs/benchmark.md) tests this on 10 public classification and regression
+[benchmark](https://github.com/hengbolei/VizJudge/blob/main/docs/benchmark.md) tests this on 10 public classification and regression
 datasets (K = 3, 5, 10; 5 seeds; selectors see only the training split).
 
 Average rank among 7 selectors (1 = best, current scoring):
@@ -197,7 +194,7 @@ requested output directory.
 
 ### Agent skill
 
-The skill lives in [`skills/vizjudge`](skills/vizjudge) and is bundled in the wheel. It
+The skill lives in [`skills/vizjudge`](https://github.com/hengbolei/VizJudge/blob/main/skills/vizjudge) and is bundled in the wheel. It
 makes the host model the Judge: recommended tool order, evidence-citation rules, a leakage
 review based on column semantics, and how to turn results into code changes. It checks its
 own prerequisites and falls back to the CLI when the MCP tools are not registered.
@@ -226,15 +223,16 @@ vizjudge --version
 
 ## Project status
 
-Alpha, local-first, v0.5. The agent loop, predictive checks, evidence-grounded Judge
-integration, execution budgets and the downstream-model benchmark are in place. Next up:
+Alpha, local-first, v0.6. The agent loop, predictive checks, leakage alerts, the
+permutation null test, evidence-grounded Judge integration, execution budgets and the
+downstream-model benchmark are in place. Next up:
 benchmarking live Judge quality, image/OCR ingestion and OS-level sandboxing. See the
-[roadmap](docs/roadmap.md), the [report schema guide](docs/report-schema.md) and the
-[changelog](CHANGELOG.md).
+[roadmap](https://github.com/hengbolei/VizJudge/blob/main/docs/roadmap.md), the [report schema guide](https://github.com/hengbolei/VizJudge/blob/main/docs/report-schema.md) and the
+[changelog](https://github.com/hengbolei/VizJudge/blob/main/CHANGELOG.md).
 
 ## Development
 
-Dependencies are pinned in [`uv.lock`](uv.lock). CI runs lint and tests on Linux and Windows
+Dependencies are pinned in [`uv.lock`](https://github.com/hengbolei/VizJudge/blob/main/uv.lock). CI runs lint and tests on Linux and Windows
 with Python 3.11 and 3.12, then builds and smoke-tests the wheel.
 
 ```bash
@@ -245,4 +243,4 @@ uv run ruff check .
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/hengbolei/VizJudge/blob/main/LICENSE)
